@@ -8,15 +8,15 @@ import transformers
 from transformers import GPT2Tokenizer, GPT2TokenizerFast, LlamaTokenizer, AutoTokenizer
 
 from ..util.globals import *
-from ..trainer.utils import dict_to
+from ..util.dict_utils import dict_to
 
 
 class KnowEditDataset(Dataset):
-    """
-    Dataset of factual knowledge based on KnowEdit.
-    Specifically selected from the QA validation slice from Mitchell et al.
-    Project page: http://nlp.cs.washington.edu/zeroshot/
-    """
+
+
+
+
+
     
     def __init__(self, data_dir: str, size: typing.Optional[int] = None, config=None, *args, **kwargs):
         data_dir = Path(data_dir)
@@ -29,14 +29,14 @@ class KnowEditDataset(Dataset):
         else:
             self.max_length = 40
 
-        # For Meta Training
+                           
         if config is not None and hasattr(config, 'tokenizer_name'):
             tok_name = (
                 config.tokenizer_name
                 if config.tokenizer_name is not None
                 else config.model.name
             )
-            # tokenizer = AutoTokenizer.from_pretrained("THUDM/chatglm2-6b", trust_remote_code=True)
+                                                                                                    
             tokenizer = getattr(transformers, config.tokenizer_class).from_pretrained(
                 tok_name, trust_remote_code=True
             )
@@ -52,8 +52,8 @@ class KnowEditDataset(Dataset):
                 tokenizer.eos_token='<|endoftext|>'
                 tokenizer.pad_token='<|endoftext|>'
                 tokenizer.unk_token='<|endoftext|>'
-                # tokenizer.padding_side = 'left'
-                # print('QwenTokenizer Detected, Set pad token id and left padding!!!')
+                                                 
+                                                                                       
             self.tok = tokenizer
 
         with open(zsre_loc, "r") as f:
@@ -112,7 +112,7 @@ class KnowEditDataset(Dataset):
 
         batches["raw"] = batch
 
-        # edit_inner
+                    
         edit_inner = {}
         edit_inner["input_ids"] = batches["src_input_ids"]
         edit_inner["attention_mask"] = batches["src_attention_mask"]
@@ -120,7 +120,7 @@ class KnowEditDataset(Dataset):
 
         edit_inner["labels"] = edit_labels
 
-        # loc
+             
         loc = dict(
             self.tok(
                 loc,
@@ -143,7 +143,7 @@ class KnowEditDataset(Dataset):
         loc["decoder_attention_mask"] = loc_ans["attention_mask"]
         loc["labels"] = self.get_edit_labels(loc_ans["input_ids"])
 
-        # portability TODO
+                          
 
         batch = {
             "edit_inner": edit_inner,
@@ -181,7 +181,7 @@ class KnowEditDataset(Dataset):
 
         batches["raw"] = batch
 
-        # edit_inner
+                    
         edit_inner = {}
         edit_inner["input_ids"] = batches["src_input_ids"]
         edit_inner["attention_mask"] = batches["src_attention_mask"]
@@ -190,7 +190,7 @@ class KnowEditDataset(Dataset):
         edit_inner["labels"] = edit_labels
 
 
-        # loc
+             
         loc = dict(
             self.tok(
                 loc,
@@ -213,7 +213,7 @@ class KnowEditDataset(Dataset):
         loc["decoder_attention_mask"] = loc_ans["attention_mask"]
         loc["labels"] = self.get_edit_labels(loc_ans["input_ids"])
 
-        # portability TODO
+                          
         batch = {
             "edit_inner": edit_inner,
             "loc": loc,

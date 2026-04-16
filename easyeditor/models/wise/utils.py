@@ -53,7 +53,7 @@ def uuid(digits=4):
     return uuid.uuid_value
 
 def ckpt_dir():
-    """returns the directory in which to store model checkpoints"""
+
     path = "./ckpts/"
     if not os.path.exists(path):
         os.makedirs(path)
@@ -66,20 +66,20 @@ def get_params(model):
     return model.state_dict()
 
 def get_shape(p, model): 
-    # We need to flip the shapes since OpenAI gpt2 uses convs instead of linear
+                                                                               
     return p.shape if isinstance(model, transformers.GPT2LMHeadModel) else (p.shape[1], p.shape[0])
 
 def get_logits(x):
     return x.logits if hasattr(x, "logits") else x
 
 def tokenize(batch, tokenizer, device, context_templates=None, hparams=None):
-    # Initialize lists to store the processed data from each batch entry
+                                                                        
     len_temp = len(context_templates)
     prompts = [item['prompt'] for item in batch]
     labels = [item['target_new'] for item in batch]
     loc_prompts = [item['loc_prompt'] for item in batch]
     
-    mask_token = -100  # ignore_index of CrossEntropyLoss
+    mask_token = -100                                    
     if hasattr(hparams, 'use_chat_template') and hparams.use_chat_template:
         full_prompt = [tokenizer.apply_chat_template([{"role":"user", "content":templ.format(p)}],
                                         add_generation_prompt=True,
@@ -92,13 +92,13 @@ def tokenize(batch, tokenizer, device, context_templates=None, hparams=None):
     else:
         full_prompt = [f"{templ.format(p + ' ' + l)}" for templ in context_templates for p, l in zip(prompts, labels)]
         prompt_ids = tokenizer([f"{templ.format(p)}" for templ in context_templates for p in prompts], return_tensors="pt", padding=True, truncation=True)["input_ids"]
-    full_prompt += loc_prompts  # add for subject activation
+    full_prompt += loc_prompts                              
     
     num_prompt_toks = [len(i) for i in prompt_ids]
     tokens = tokenizer(full_prompt, return_tensors="pt", padding=True, truncation=True)
     tokens["labels"] = tokens["input_ids"].clone()
     
-    # Mask the tokens based on hparams.objective_optimization
+                                                             
     if hparams.objective_optimization == 'only_label':
         for i in range(len(num_prompt_toks)):
             tokens["labels"][i][:num_prompt_toks[i]] = mask_token
@@ -107,9 +107,9 @@ def tokenize(batch, tokenizer, device, context_templates=None, hparams=None):
     act_masks = []
     deact_masks = []
 
-    # Iterate through each batch entry and compute act_mask, deact_mask
+                                                                       
     for i, loc_prompt in enumerate(loc_prompts):
-        if loc_prompt in prompts[i]:  # subject: Factual Editing
+        if loc_prompt in prompts[i]:                            
             subject_token = tokenizer.encode(' ' + loc_prompt, add_special_tokens=False)
             subject_token1 = tokenizer.encode(loc_prompt, add_special_tokens=False)
             subject_length = len(subject_token)
@@ -123,24 +123,24 @@ def tokenize(batch, tokenizer, device, context_templates=None, hparams=None):
                 act_mask[j][start_idx: start_idx + subject_length] = 1
                 deact_mask[j][:start_idx] = 1
                 deact_mask[j][start_idx + subject_length:] = 1
-        else:  # General Editing
+        else:                   
             act_mask = None
             deact_mask = None
 
-        # Append the masks to the lists
+                                       
         act_masks.append(act_mask)
         deact_masks.append(deact_mask)
 
-    # Convert to tensors and move to the specified device
+                                                         
     act_masks = [mask.to(device) if mask is not None else None for mask in act_masks]
     deact_masks = [mask.to(device) if mask is not None else None for mask in deact_masks]
     
     tokens = {key: val.to(device) for key, val in tokens.items()}
-    # tokens:[(bs*(len_temp+1))*sequence_length],actmasks:bs*[len_temp*sequence_length],deact_masks:bs*[len_temp*sequence_length]
+                                                                                                                                 
     return tokens, act_masks, deact_masks
 
 def multimodal_tokenize(batch, processor, device, context_templates=None, hparams=None):
-    # Initialize lists to store the processed data from each batch entry
+                                                                        
     len_temp = 1
     prompts = [item['prompt'] for item in batch]
     input_images = [item['image'] for item in batch]
@@ -151,7 +151,7 @@ def multimodal_tokenize(batch, processor, device, context_templates=None, hparam
 
     print(input_images)
 
-    mask_token = -100  # ignore_index of CrossEntropyLoss
+    mask_token = -100                                    
     if hasattr(hparams, 'use_chat_template') and hparams.use_chat_template:
         if file_type == "video":
             temp_prompt = [processor.apply_chat_template([
@@ -237,16 +237,16 @@ def multimodal_tokenize(batch, processor, device, context_templates=None, hparam
     tokens = processor(text=full_prompt, return_tensors="pt", padding=True, truncation=True)
     tokens["labels"] = tokens["input_ids"].clone()
 
-    # Mask the tokens based on hparams.objective_optimization
+                                                             
     if hparams.objective_optimization == 'only_label':
         for i in range(len(num_prompt_toks)):
             tokens["labels"][i][:num_prompt_toks[i]] = mask_token
     
     act_masks = []
     deact_masks = []
-    # Iterate through each batch entry and compute act_mask, deact_mask
+                                                                       
     for i, loc_prompt in enumerate(loc_prompts):
-        if loc_prompt in prompts[i]:  # subject: Factual Editing
+        if loc_prompt in prompts[i]:                            
             subject_token = processor.tokenizer.encode(' ' + loc_prompt, add_special_tokens=False)
             subject_token1 = processor.tokenizer.encode(loc_prompt, add_special_tokens=False)
             subject_length = len(subject_token)
@@ -260,15 +260,15 @@ def multimodal_tokenize(batch, processor, device, context_templates=None, hparam
                 act_mask[j][start_idx: start_idx + subject_length] = 1
                 deact_mask[j][:start_idx] = 1
                 deact_mask[j][start_idx + subject_length:] = 1
-        else:  # General Editing
+        else:                   
             act_mask = None
             deact_mask = None
 
-        # Append the masks to the lists
+                                       
         act_masks.append(act_mask)
         deact_masks.append(deact_mask)
 
-    # Convert to tensors and move to the specified device
+                                                         
     act_masks = [mask.to(device) if mask is not None else None for mask in act_masks]
     deact_masks = [mask.to(device) if mask is not None else None for mask in deact_masks]
 
@@ -287,7 +287,7 @@ def multimodal_tokenize(batch, processor, device, context_templates=None, hparam
 
 
 class EarlyStopMeter:
-    """Computes and stores the average and current value"""
+
 
     def __init__(self):
         self.reset()
@@ -310,7 +310,7 @@ class EarlyStopMeter:
         return abs(self.val - self.pre) <= 1e-4 and self.val <= 0.02
 
 class EditingMeanAct:
-    """Computes and stores the average and current value"""
+
 
     def __init__(self, min_a=1e9):
         self.reset(min_a=min_a)
@@ -354,7 +354,7 @@ def get_context_templates(model, tok, length_params, device):
             )
             CONTEXT_TEMPLATES_CACHE += tok.batch_decode(gen_token, skip_special_tokens=True)
         CONTEXT_TEMPLATES_CACHE = ['{}'] + [_ + ' {}' for _ in CONTEXT_TEMPLATES_CACHE]
-        # print(f"Cached context templates {CONTEXT_TEMPLATES_CACHE}")
+                                                                      
 
     return CONTEXT_TEMPLATES_CACHE
 

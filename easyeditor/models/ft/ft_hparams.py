@@ -7,7 +7,7 @@ from ...util.hparams import HyperParams
 
 @dataclass
 class FTHyperParams(HyperParams):
-    # Method
+            
     layers: List[int]
     num_steps: int
     lr: float
@@ -15,7 +15,7 @@ class FTHyperParams(HyperParams):
     kl_factor: float
     norm_constraint: float
 
-    # Module templates
+                      
     rewrite_module_tmp: str
     layer_module_tmp: str
     mlp_module_tmp: str
@@ -27,7 +27,7 @@ class FTHyperParams(HyperParams):
     model_name: str
     objective_optimization: str
 
-    # Defaults
+              
     batch_size: int = 64
     max_length: int = 40
     model_parallel: bool = False

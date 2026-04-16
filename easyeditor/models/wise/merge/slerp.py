@@ -58,31 +58,31 @@ class slerp:
             is_torch = True
             v1 = v1.detach().cpu().float().numpy()
 
-        # Copy the vectors to reuse them later
+                                              
         v0_copy = np.copy(v0)
         v1_copy = np.copy(v1)
 
-        # Normalize the vectors to get the directions and angles
+                                                                
         v0 = normalize(v0, eps)
         v1 = normalize(v1, eps)
 
-        # Dot product with the normalized vectors (can't use np.dot in W)
+                                                                         
         dot = np.sum(v0 * v1)
 
-        # If absolute value of dot product is almost 1, vectors are ~colinear, so use lerp
+                                                                                          
         if np.abs(dot) > DOT_THRESHOLD:
             res = lerp(t, v0_copy, v1_copy)
             return maybe_torch(res, is_torch)
 
-        # Calculate initial angle between v0 and v1
+                                                   
         theta_0 = np.arccos(dot)
         sin_theta_0 = np.sin(theta_0)
 
-        # Angle at timestep t
+                             
         theta_t = theta_0 * t
         sin_theta_t = np.sin(theta_t)
 
-        # Finish the slerp algorithm
+                                    
         s0 = np.sin(theta_0 - theta_t) / sin_theta_0
         s1 = sin_theta_t / sin_theta_0
         res = s0 * v0_copy + s1 * v1_copy

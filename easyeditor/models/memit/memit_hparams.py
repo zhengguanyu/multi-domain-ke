@@ -7,7 +7,7 @@ import yaml
 
 @dataclass
 class MEMITHyperParams(HyperParams):
-    # Method
+            
     layers: List[int]
     layer_selection: Literal["all", "random"]
     fact_token: Literal[
@@ -22,7 +22,7 @@ class MEMITHyperParams(HyperParams):
     mom2_adjustment: bool
     mom2_update_weight: float
 
-    # Module templates
+                      
     rewrite_module_tmp: str
     layer_module_tmp: str
     mlp_module_tmp: str
@@ -30,7 +30,7 @@ class MEMITHyperParams(HyperParams):
     ln_f_module: str
     lm_head_module: str
 
-    # Statistics
+                
     mom2_dataset: str
     mom2_n_samples: int
     mom2_dtype: str

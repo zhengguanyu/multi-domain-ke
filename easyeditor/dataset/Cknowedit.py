@@ -8,7 +8,7 @@ import transformers
 from transformers import GPT2Tokenizer, GPT2TokenizerFast, LlamaTokenizer, AutoTokenizer
 
 from ..util.globals import *
-from ..trainer.utils import dict_to
+from ..util.dict_utils import dict_to
 
 
 class CKnowEditDataset(Dataset):
@@ -44,8 +44,8 @@ class CKnowEditDataset(Dataset):
                 tokenizer.eos_token='<|endoftext|>'
                 tokenizer.pad_token='<|endoftext|>'
                 tokenizer.unk_token='<|endoftext|>'
-                # tokenizer.padding_side = 'left'
-                # print('QwenTokenizer Detected, Set pad token id and left padding!!!')
+                                                 
+                                                                                       
             self.tok = tokenizer
 
         with open(Cknowedit_loc, "r", encoding='utf-8') as f:
@@ -102,7 +102,7 @@ class CKnowEditDataset(Dataset):
 
         batches["raw"] = batch
 
-        # edit_inner
+                    
         edit_inner = {}
         edit_inner["input_ids"] = batches["src_input_ids"]
         edit_inner["attention_mask"] = batches["src_attention_mask"]
@@ -110,7 +110,7 @@ class CKnowEditDataset(Dataset):
 
         edit_inner["labels"] = edit_labels
 
-        # loc
+             
         loc = dict(
             self.tok(
                 loc,
@@ -133,7 +133,7 @@ class CKnowEditDataset(Dataset):
         loc["decoder_attention_mask"] = loc_ans["attention_mask"]
         loc["labels"] = self.get_edit_labels(loc_ans["input_ids"])
 
-        # portability TODO
+                          
 
         batch = {
             "edit_inner": edit_inner,
@@ -171,7 +171,7 @@ class CKnowEditDataset(Dataset):
 
         batches["raw"] = batch
 
-        # edit_inner
+                    
         edit_inner = {}
         edit_inner["input_ids"] = batches["src_input_ids"]
         edit_inner["attention_mask"] = batches["src_attention_mask"]
@@ -180,7 +180,7 @@ class CKnowEditDataset(Dataset):
         edit_inner["labels"] = edit_labels
 
 
-        # loc
+             
         loc = dict(
             self.tok(
                 loc,
@@ -203,7 +203,7 @@ class CKnowEditDataset(Dataset):
         loc["decoder_attention_mask"] = loc_ans["attention_mask"]
         loc["labels"] = self.get_edit_labels(loc_ans["input_ids"])
 
-        # portability TODO
+                          
         batch = {
             "edit_inner": edit_inner,
             "loc": loc,

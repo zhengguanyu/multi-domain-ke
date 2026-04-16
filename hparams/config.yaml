@@ -1,0 +1,6 @@
+save_dir: models/
+log_dir: logs/
+
+defaults:
+  alg_name: ASMem
+  hparams_name: ASMem/cloud-llama3-8b

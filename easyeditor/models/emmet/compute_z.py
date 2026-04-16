@@ -18,12 +18,12 @@ def compute_z(
     layer: int,
     context_templates: List[str],
 ) -> Tuple[torch.Tensor, torch.Tensor]:
-    """
-    Computes the value (right) vector for the rank-1 update.
-    Runs a simple optimization procedure.
-    """
 
-    # Get model parameters
+
+
+
+
+                          
     lm_w, ln_f = (
         nethook.get_parameter(model, f"{hparams.lm_head_module}.weight").T,
         nethook.get_module(model, hparams.ln_f_module),
@@ -35,12 +35,12 @@ def compute_z(
 
     print("Computing right vector (v)")
 
-    # Tokenize target into list of int token IDs
+                                                
     target_ids = tok.encode(request["target_new"], return_tensors="pt", add_special_tokens=False).to(f"cuda:{hparams.device}")[0]
 
     if target_ids[0] == tok.bos_token_id or target_ids[0] == tok.unk_token_id:
         target_ids = target_ids[1:]
-    # Compile list of rewriting and KL x/y pairs
+                                                
     rewriting_prompts, kl_prompts = [
         context.format(request["prompt"]) + tok.decode(target_ids[:-1])
         for context_types in context_templates
@@ -54,7 +54,7 @@ def compute_z(
         padding=True,
     ).to(f"cuda:{hparams.device}")
 
-    # Compute rewriting targets
+                               
     rewriting_targets = torch.tensor(-100, device=f"cuda:{hparams.device}").repeat(
         len(rewriting_prompts), *input_tok["input_ids"].shape[1:]
     )
@@ -62,7 +62,7 @@ def compute_z(
         ex_len = input_tok["attention_mask"][i].sum()
         rewriting_targets[i, ex_len - len(target_ids) : ex_len] = target_ids
 
-    # Compute indices of the tokens where the fact is looked up
+                                                               
     lookup_idxs = [
         find_fact_lookup_idx(
             prompt, request["subject"], tok, hparams.fact_token, verbose=(i == 0)
@@ -70,14 +70,14 @@ def compute_z(
         for i, prompt in enumerate(all_prompts)
     ]
 
-    # Finalize rewrite and loss layers
+                                      
     loss_layer = max(hparams.v_loss_layer, layer)
     print(f"Rewrite layer is {layer}")
     print(f"Tying optimization objective to {loss_layer}")
 
-    # Set up an optimization over a latent vector that, when output at the
-    # rewrite layer, i.e. hypothesized fact lookup location, will induce the
-    # target token to be predicted at the final layer.
+                                                                          
+                                                                            
+                                                      
     if hasattr(model.config, 'n_embd'):
         delta = torch.zeros((model.config.n_embd,), requires_grad=True, device=f"cuda:{hparams.device}")
     elif hasattr(model.config, 'hidden_size'):
@@ -86,18 +86,18 @@ def compute_z(
         raise NotImplementedError
     target_init, kl_distr_init = None, None
 
-    # Inserts new "delta" variable at the appropriate part of the computation
+                                                                             
     def edit_output_fn(cur_out, cur_layer):
         nonlocal target_init
 
         if cur_layer == hparams.layer_module_tmp.format(layer):
-            # Store initial value of the vector of interest
+                                                           
             if target_init is None:
                 print("Recording initial value of v*")
-                # Initial value is recorded for the clean sentence
+                                                                  
                 target_init = cur_out[0][0, lookup_idxs[0]].detach().clone()
 
-            # Add intervened delta
+                                  
             for i, idx in enumerate(lookup_idxs):
 
                 if len(lookup_idxs)!=len(cur_out[0]):
@@ -107,15 +107,15 @@ def compute_z(
 
         return cur_out
 
-    # Optimizer
+               
     opt = torch.optim.Adam([delta], lr=hparams.v_lr)
     nethook.set_requires_grad(False, model)
 
-    # Execute optimization
+                          
     for it in range(hparams.v_num_grad_steps):
         opt.zero_grad()
 
-        # Forward propagation
+                             
         with nethook.TraceDict(
             module=model,
             layers=[
@@ -127,7 +127,7 @@ def compute_z(
             edit_output=edit_output_fn,
         ) as tr:
             logits = model(**input_tok).logits
-            # Compute distribution for KL divergence
+                                                    
             kl_logits = torch.stack(
                 [
                     logits[i - len(kl_prompts), idx, :]
@@ -139,7 +139,7 @@ def compute_z(
             if kl_distr_init is None:
                 kl_distr_init = kl_log_probs.detach().clone()
 
-        # Compute loss on rewriting targets
+                                           
 
         output=tr[hparams.layer_module_tmp.format(loss_layer)].output[0]
         if output.shape[1]!=rewriting_targets.shape[1]:
@@ -154,7 +154,7 @@ def compute_z(
         ).squeeze(2)
         mask = (rewriting_targets != -100).float()
 
-        # Aggregate total losses
+                                
         nll_loss_each = -(loss * mask.to(loss.device)).sum(1) / target_ids.size(0)
         nll_loss = nll_loss_each.mean()
         kl_loss = hparams.kl_factor * torch.nn.functional.kl_div(
@@ -163,7 +163,7 @@ def compute_z(
         weight_decay = hparams.v_weight_decay * (
             torch.norm(delta) / torch.norm(target_init) ** 2
         )
-        # weight_decay = hparams.v_weight_decay * torch.norm(delta) ** 2
+                                                                        
         loss = nll_loss + kl_loss.to(nll_loss.device) + weight_decay.to(nll_loss.device)
         print(
             f"loss {np.round(loss.item(), 3)} = {np.round(nll_loss.item(), 3)} + {np.round(kl_loss.item(), 3)} + {np.round(weight_decay.item(), 3)} "
@@ -176,11 +176,11 @@ def compute_z(
         if it == hparams.v_num_grad_steps - 1:
             break
 
-        # Backpropagate
+                       
         loss.backward()
         opt.step()
 
-        # Project within L2 ball
+                                
         max_norm = hparams.clamp_norm_factor * target_init.norm()
         if delta.norm() > max_norm:
             with torch.no_grad():
@@ -204,10 +204,10 @@ def get_module_input_output_at_words(
     fact_token_strategy: str,
     track=None,
 ) -> Tuple[torch.Tensor]:
-    """
-    Retrieves detached representations for a word at the input and
-    output of a particular layer module.
-    """
+
+
+
+
 
     word_repr_args = dict(
         model=model,
@@ -256,9 +256,9 @@ def find_fact_lookup_idx(
     fact_token_strategy: str,
     verbose=True,
 ) -> int:
-    """
-    Computes hypothesized fact lookup index given a sentence and subject.
-    """
+
+
+
 
     ret = None
     if fact_token_strategy == "last":

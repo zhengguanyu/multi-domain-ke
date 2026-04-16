@@ -8,17 +8,17 @@ from . import nethook
 
 
 class LogitLens:
-    """
-    Applies the LM head at the output of each hidden layer, then analyzes the
-    resultant token probability distribution.
 
-    Only works when hooking outputs of *one* individual generation.
 
-    Inspiration: https://www.lesswrong.com/posts/AcKRB8wDpdaN6v6ru/interpreting-gpt-the-logit-lens
 
-    Warning: when running multiple times (e.g. generation), will return
-    outputs _only_ for the last processing step.
-    """
+
+
+
+
+
+
+
+
 
     def __init__(
         self,

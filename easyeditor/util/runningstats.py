@@ -1,45 +1,45 @@
-"""
-To use a runningstats object,
 
-    1. Create the the desired stat object, e.g., `m = Mean()`
-    2. Feed it batches via the add method, e.g., `m.add(batch)`
-    3. Repeat step 2 any number of times.
-    4. Read out the statistic of interest, e.g., `m.mean()`
 
-Built-in runningstats objects include:
 
-    Mean - produces mean().
-    Variance - mean() and variance() and stdev().
-    Covariance - mean(), covariance(), correlation(), variance(), stdev().
-    SecondMoment - moment() is the non-mean-centered covariance, E[x x^T].
-    Quantile - quantile(), min(), max(), median(), mean(), variance(), stdev().
-    TopK - topk() returns (values, indexes).
-    Bincount - bincount() histograms nonnegative integer data.
-    IoU - intersection(), union(), iou() tally binary co-occurrences.
-    History - history() returns concatenation of data.
-    CrossCovariance - covariance between two signals, without self-covariance.
-    CrossIoU - iou between two signals, without self-IoU.
-    CombinedStat - aggregates any set of stats.
 
-Add more running stats by subclassing the Stat class.
 
-These statistics are vectorized along dim>=1, so stat.add()
-should supply a two-dimensional input where the zeroth
-dimension is the batch/sampling dimension and the first
-dimension is the feature dimension.
 
-The data type and device used matches the data passed to add();
-for example, for higher-precision covariances, convert to double
-before calling add().
 
-It is common to want to compute and remember a statistic sampled
-over a Dataset, computed in batches, possibly caching the computed
-statistic in a file. The tally(stat, dataset, cache) handles
-this pattern.  It takes a statistic, a dataset, and a cache filename
-and sets up a data loader that can be run (or not, if cached) to
-compute the statistic, adopting the convention that cached stats are
-saved to and loaded from numpy npz files.
-"""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 import math
 import os
@@ -52,50 +52,50 @@ from torch.utils.data.sampler import Sampler
 
 
 def tally(stat, dataset, cache=None, quiet=False, **kwargs):
-    """
-    To use tally, write code like the following.
 
-        stat = Mean()
-        ds = MyDataset()
-        for batch in tally(stat, ds, cache='mymean.npz', batch_size=50):
-           stat.add(batch)
-        mean = stat.mean()
 
-    The first argument should be the Stat being computed. After the
-    loader is exhausted, tally will bring this stat to the cpu and
-    cache it (if a cache is specified).
 
-    The dataset can be a torch Dataset or a plain Tensor, or it can
-    be a callable that returns one of those.
 
-    Details on caching via the cache= argument:
 
-        If the given filename cannot be loaded, tally will leave the
-        statistic object empty and set up a DataLoader object so that
-        the loop can be run.  After the last iteration of the loop, the
-        completed statistic will be moved to the cpu device and also
-        saved in the cache file.
 
-        If the cached statistic can be loaded from the given file, tally
-        will not set up the data loader and instead will return a fully
-        loaded statistic object (on the cpu device) and an empty list as
-        the loader.
 
-        The `with cache_load_enabled(False):` context manager can
-        be used to disable loading from the cache.
 
-    If needed, a DataLoader will be created to wrap the dataset:
 
-        Keyword arguments of tally are passed to the DataLoader,
-        so batch_size, num_workers, pin_memory, etc. can be specified.
 
-    Subsampling is supported via sample_size= and random_sample=:
 
-        If sample_size=N is specified, rather than loading the whole
-        dataset, only the first N items are sampled.  If additionally
-        random_sample=S is specified, the pseudorandom seed S will be
-        used to select a fixed psedorandom sample of size N to sample.
-    """
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     assert isinstance(stat, Stat)
     args = {}
     for k in ["sample_size"]:
@@ -122,10 +122,10 @@ def tally(stat, dataset, cache=None, quiet=False, **kwargs):
 
 
 class cache_load_enabled:
-    """
-    When used as a context manager, cache_load_enabled(False) will prevent
-    tally from loading cached statsitics, forcing them to be recomputed.
-    """
+
+
+
+
 
     def __init__(self, enabled=True):
         self.prev = False
@@ -142,73 +142,73 @@ class cache_load_enabled:
 
 
 class Stat:
-    """
-    Abstract base class for a running pytorch statistic.
-    """
+
+
+
 
     def __init__(self, state):
-        """
-        By convention, all Stat subclasses can be initialized by passing
-        state=; and then they will initialize by calling load_state_dict.
-        """
+
+
+
+
         self.load_state_dict(resolve_state_dict(state))
 
     def add(self, x, *args, **kwargs):
-        """
-        Observes a batch of samples to be incorporated into the statistic.
-        Dimension 0 should be the batch dimension, and dimension 1 should
-        be the feature dimension of the pytorch tensor x.
-        """
+
+
+
+
+
         pass
 
     def load_state_dict(self, d):
-        """
-        Loads this Stat from a dictionary of numpy arrays as saved
-        by state_dict.
-        """
+
+
+
+
         pass
 
     def state_dict(self):
-        """
-        Saves this Stat as a dictionary of numpy arrays that can be
-        stored in an npz or reloaded later using load_state_dict.
-        """
+
+
+
+
         return {}
 
     def save(self, filename):
-        """
-        Saves this stat as an npz file containing the state_dict.
-        """
+
+
+
         save_cached_state(filename, self, {})
 
     def load(self, filename):
-        """
-        Loads this stat from an npz file containing a saved state_dict.
-        """
+
+
+
         self.load_state_dict(load_cached_state(filename, {}, quiet=True, throw=True))
 
     def to_(self, device):
-        """
-        Moves this Stat to the given device.
-        """
+
+
+
         pass
 
     def cpu_(self):
-        """
-        Moves this Stat to the cpu device.
-        """
+
+
+
         self.to_("cpu")
 
     def cuda_(self):
-        """
-        Moves this Stat to the default cuda device.
-        """
+
+
+
         self.to_("cuda")
 
     def _normalize_add_shape(self, x, attr="data_shape"):
-        """
-        Flattens input data to 2d.
-        """
+
+
+
         if not torch.is_tensor(x):
             x = torch.tensor(x)
         if len(x.shape) < 1:
@@ -222,9 +222,9 @@ class Stat:
         return x.view(x.shape[0], int(numpy.prod(data_shape)))
 
     def _restore_result_shape(self, x, attr="data_shape"):
-        """
-        Restores output data to input data shape.
-        """
+
+
+
         data_shape = getattr(self, attr, None)
         if data_shape is None:
             return x
@@ -232,9 +232,9 @@ class Stat:
 
 
 class Mean(Stat):
-    """
-    Running mean.
-    """
+
+
+
 
     def __init__(self, state=None):
         if state is not None:
@@ -251,15 +251,15 @@ class Mean(Stat):
         batch_count = a.shape[0]
         batch_mean = a.sum(0) / batch_count
         self.batchcount += 1
-        # Initial batch.
+                        
         if self._mean is None:
             self.count = batch_count
             self._mean = batch_mean
             return
-        # Update a batch using Chan-style update for numerical stability.
+                                                                         
         self.count += batch_count
         new_frac = float(batch_count) / self.count
-        # Update the mean according to the batch deviation from the old mean.
+                                                                             
         delta = batch_mean.sub_(self._mean).mul_(new_frac)
         self._mean.add_(delta)
 
@@ -292,9 +292,9 @@ class Mean(Stat):
 
 
 class NormMean(Mean):
-    """
-    Running average of the norm of input vectors
-    """
+
+
+
 
     def __init__(self, state=None):
         super().__init__(state)
@@ -304,10 +304,10 @@ class NormMean(Mean):
 
 
 class Variance(Stat):
-    """
-    Running computation of mean and variance. Use this when you just need
-    basic stats without covariance.
-    """
+
+
+
+
 
     def __init__(self, state=None):
         if state is not None:
@@ -326,20 +326,20 @@ class Variance(Stat):
         batch_mean = a.sum(0) / batch_count
         centered = a - batch_mean
         self.batchcount += 1
-        # Initial batch.
+                        
         if self._mean is None:
             self.count = batch_count
             self._mean = batch_mean
             self.v_cmom2 = centered.pow(2).sum(0)
             return
-        # Update a batch using Chan-style update for numerical stability.
+                                                                         
         oldcount = self.count
         self.count += batch_count
         new_frac = float(batch_count) / self.count
-        # Update the mean according to the batch deviation from the old mean.
+                                                                             
         delta = batch_mean.sub_(self._mean).mul_(new_frac)
         self._mean.add_(delta)
-        # Update the variance using the batch deviation
+                                                       
         self.v_cmom2.add_(centered.pow(2).sum(0))
         self.v_cmom2.add_(delta.pow_(2).mul_(new_frac * oldcount))
 
@@ -384,13 +384,13 @@ class Variance(Stat):
 
 
 class Covariance(Stat):
-    """
-    Running computation. Use this when the entire covariance matrix is needed,
-    and when the whole covariance matrix fits in the GPU.
 
-    Chan-style numerically stable update of mean and full covariance matrix.
-    Chan, Golub. LeVeque. 1983. http://www.jstor.org/stable/2683386
-    """
+
+
+
+
+
+
 
     def __init__(self, state=None):
         if state is not None:
@@ -405,20 +405,20 @@ class Covariance(Stat):
         if len(a) == 0:
             return
         batch_count = a.shape[0]
-        # Initial batch.
+                        
         if self._mean is None:
             self.count = batch_count
             self._mean = a.sum(0) / batch_count
             centered = a - self._mean
             self.cmom2 = centered.t().mm(centered)
             return
-        # Update a batch using Chan-style update for numerical stability.
+                                                                         
         self.count += batch_count
-        # Update the mean according to the batch deviation from the old mean.
+                                                                             
         delta = a - self._mean
         self._mean.add_(delta.sum(0) / self.count)
         delta2 = a - self._mean
-        # Update the variance using the batch deviation
+                                                       
         self.cmom2.addmm_(mat1=delta.t(), mat2=delta2)
 
     def to_(self, device):
@@ -467,11 +467,11 @@ class Covariance(Stat):
 
 
 class SecondMoment(Stat):
-    """
-    Running computation. Use this when the entire non-centered 2nd-moment
-    'covariance-like' matrix is needed, and when the whole matrix fits
-    in the GPU.
-    """
+
+
+
+
+
 
     def __init__(self, split_batch=True, state=None):
         if state is not None:
@@ -484,11 +484,11 @@ class SecondMoment(Stat):
         a = self._normalize_add_shape(a)
         if len(a) == 0:
             return
-        # Initial batch reveals the shape of the data.
+                                                      
         if self.count == 0:
             self.mom2 = a.new(a.shape[1], a.shape[1]).zero_()
         batch_count = a.shape[0]
-        # Update the covariance using the batch deviation
+                                                         
         self.count += batch_count
         self.mom2 += a.t().mm(a)
 
@@ -512,10 +512,10 @@ class SecondMoment(Stat):
 
 
 class Bincount(Stat):
-    """
-    Running bincount.  The counted array should be an integer type with
-    non-negative integers.
-    """
+
+
+
+
 
     def __init__(self, state=None):
         if state is not None:
@@ -560,14 +560,14 @@ class Bincount(Stat):
 
 
 class CrossCovariance(Stat):
-    """
-    Covariance. Use this when an off-diagonal block of the covariance
-    matrix is needed (e.g., when the whole covariance matrix does
-    not fit in the GPU, this could use a quarter of the memory).
 
-    Chan-style numerically stable update of mean and full covariance matrix.
-    Chan, Golub. LeVeque. 1983. http://www.jstor.org/stable/2683386
-    """
+
+
+
+
+
+
+
 
     def __init__(self, split_batch=True, state=None):
         if state is not None:
@@ -591,7 +591,7 @@ class CrossCovariance(Stat):
                 for d in [a, b]
             ]
         batch_count = a.shape[0]
-        # Initial batch.
+                        
         if self._mean is None:
             self.count = batch_count
             self._mean = [d.sum(0) / batch_count for d in [a, b]]
@@ -599,16 +599,16 @@ class CrossCovariance(Stat):
             self.v_cmom2 = [c.pow(2).sum(0) for c in centered]
             self.cmom2 = centered[0].t().mm(centered[1])
             return
-        # Update a batch using Chan-style update for numerical stability.
+                                                                         
         self.count += batch_count
-        # Update the mean according to the batch deviation from the old mean.
+                                                                             
         delta = [(d - bm) for d, bm in zip([a, b], self._mean)]
         for m, d in zip(self._mean, delta):
             m.add_(d.sum(0) / self.count)
         delta2 = [(d - bm) for d, bm in zip([a, b], self._mean)]
-        # Update the cross-covariance using the batch deviation
+                                                               
         self.cmom2.addmm_(mat1=delta[0].t(), mat2=delta2[1])
-        # Update the variance using the batch deviation
+                                                       
         for vc2, d, d2 in zip(self.v_cmom2, delta, delta2):
             vc2.add_((d * d2).sum(0))
 
@@ -628,7 +628,7 @@ class CrossCovariance(Stat):
         covariance = self.covariance(unbiased=False)
         rstdev = [s.reciprocal() for s in self.stdev(unbiased=False)]
         cor = rstdev[0][:, None] * covariance * rstdev[1][None, :]
-        # Remove NaNs
+                     
         cor[torch.isnan(cor)] = 0
         return cor
 
@@ -656,15 +656,15 @@ class CrossCovariance(Stat):
 
 
 def _float_from_bool(a):
-    """
-    Since pytorch only supports matrix multiplication on float,
-    IoU computations are done using floating point types.
 
-    This function binarizes the input (positive to True and
-    nonpositive to False), and converts from bool to float.
-    If the data is already a floating-point type, it leaves
-    it keeps the same type; otherwise it uses float.
-    """
+
+
+
+
+
+
+
+
     if a.dtype == torch.bool:
         return a.float()
     if a.dtype.is_floating_point:
@@ -673,9 +673,9 @@ def _float_from_bool(a):
 
 
 class IoU(Stat):
-    """
-    Running computation of intersections and unions of all features.
-    """
+
+
+
 
     def __init__(self, state=None):
         if state is not None:
@@ -721,9 +721,9 @@ class IoU(Stat):
 
 
 class CrossIoU(Stat):
-    """
-    Running computation of intersections and unions of two binary vectors.
-    """
+
+
+
 
     def __init__(self, state=None):
         if state is not None:
@@ -736,8 +736,8 @@ class CrossIoU(Stat):
     def add(self, a, b):
         assert len(a.shape) == 2 and len(b.shape) == 2
         assert len(a) == len(b), f"{len(a)} vs {len(b)}"
-        a = _float_from_bool(a)  # CUDA only supports mm on float...
-        b = _float_from_bool(b)  # otherwise we would use integers.
+        a = _float_from_bool(a)                                     
+        b = _float_from_bool(b)                                    
         intersection = torch.mm(a.t(), b)
         asum = a.sum(0)
         bsum = b.sum(0)
@@ -785,24 +785,24 @@ class CrossIoU(Stat):
 
 
 class Quantile(Stat):
-    """
-    Streaming randomized quantile computation for torch.
 
-    Add any amount of data repeatedly via add(data).  At any time,
-    quantile estimates be read out using quantile(q).
 
-    Implemented as a sorted sample that retains at least r samples
-    (by default r = 3072); the number of retained samples will grow to
-    a finite ceiling as the data is accumulated.  Accuracy scales according
-    to r: the default is to set resolution to be accurate to better than about
-    0.1%, while limiting storage to about 50,000 samples.
 
-    Good for computing quantiles of huge data without using much memory.
-    Works well on arbitrary data with probability near 1.
 
-    Based on the optimal KLL quantile algorithm by Karnin, Lang, and Liberty
-    from FOCS 2016.  http://ieee-focs.org/FOCS-2016-Papers/3933a071.pdf
-    """
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def __init__(self, r=3 * 1024, buffersize=None, seed=None, state=None):
         if state is not None:
@@ -810,9 +810,9 @@ class Quantile(Stat):
         self.depth = None
         self.dtype = None
         self.device = None
-        resolution = r * 2  # sample array is at least half full before discard
+        resolution = r * 2                                                     
         self.resolution = resolution
-        # Default buffersize: 128 samples (and smaller than resolution).
+                                                                        
         if buffersize is None:
             buffersize = min(128, (resolution + 7) // 8)
         self.buffersize = buffersize
@@ -842,7 +842,7 @@ class Quantile(Stat):
         self.extremes[:, -1] = -float("inf")
 
     def to_(self, device):
-        """Switches internal storage to specified device."""
+
         if device != self.device:
             old_data = self.data
             old_extremes = self.extremes
@@ -859,11 +859,11 @@ class Quantile(Stat):
         assert incoming.shape[1] == self.depth, (incoming.shape[1], self.depth)
         self.count += incoming.shape[0]
         self.batchcount += 1
-        # Convert to a flat torch array.
+                                        
         if self.samplerate >= 1.0:
             self._add_every(incoming)
             return
-        # If we are sampling, then subsample a large chunk at a time.
+                                                                     
         self._scan_extremes(incoming)
         chunksize = int(math.ceil(self.buffersize / self.samplerate))
         for index in range(0, len(incoming), chunksize):
@@ -880,10 +880,10 @@ class Quantile(Stat):
             available = self.data[0].shape[1] - ff
             if available == 0:
                 if not self._shift():
-                    # If we shifted by subsampling, then subsample.
+                                                                   
                     incoming = incoming[index:]
                     if self.samplerate >= 0.5:
-                        # First time sampling - the data source is very large.
+                                                                              
                         self._scan_extremes(incoming)
                     incoming = sample_portion(incoming, self.samplerate)
                     index = 0
@@ -899,9 +899,9 @@ class Quantile(Stat):
 
     def _shift(self):
         index = 0
-        # If remaining space at the current layer is less than half prev
-        # buffer size (rounding up), then we need to shift it up to ensure
-        # enough space for future shifting.
+                                                                        
+                                                                          
+                                           
         while self.data[index].shape[1] - self.firstfree[index] < (
             -(-self.data[index - 1].shape[1] // 2) if index else 1
         ):
@@ -921,7 +921,7 @@ class Quantile(Stat):
         return True
 
     def _scan_extremes(self, incoming):
-        # When sampling, we need to scan every item still to get extremes
+                                                                         
         self._update_extremes(
             torch.min(incoming, dim=0)[0], torch.max(incoming, dim=0)[0]
         )
@@ -1009,24 +1009,24 @@ class Quantile(Stat):
     def _expand(self):
         cap = self._next_capacity()
         if cap > 0:
-            # First, make a new layer of the proper capacity.
+                                                             
             self.data.insert(
                 0, torch.zeros(self.depth, cap, dtype=self.dtype, device=self.device)
             )
             self.firstfree.insert(0, 0)
         else:
-            # Unless we're so big we are just subsampling.
+                                                          
             assert self.firstfree[0] == 0
             self.samplerate *= 0.5
         for index in range(1, len(self.data)):
-            # Scan for existing data that needs to be moved down a level.
+                                                                         
             amount = self.firstfree[index]
             if amount == 0:
                 continue
             position = self.firstfree[index - 1]
-            # Move data down if it would leave enough empty space there
-            # This is the key invariant: enough empty space to fit half
-            # of the previous level's buffer size (rounding up)
+                                                                       
+                                                                       
+                                                               
             if self.data[index - 1].shape[1] - (amount + position) >= (
                 -(-self.data[index - 2].shape[1] // 2) if (index - 1) else 1
             ):
@@ -1036,7 +1036,7 @@ class Quantile(Stat):
                 self.firstfree[index - 1] += amount
                 self.firstfree[index] = 0
             else:
-                # Scrunch the data if it would not.
+                                                   
                 data = self.data[index][:, :amount]
                 data = data.sort()[0]
                 if index == 1:
@@ -1051,7 +1051,7 @@ class Quantile(Stat):
         cap = int(math.ceil(self.resolution * (0.67 ** len(self.data))))
         if cap < 2:
             return 0
-        # Round up to the nearest multiple of 8 for better GPU alignment.
+                                                                         
         cap = -8 * (-cap // 8)
         return max(self.buffersize, cap)
 
@@ -1059,7 +1059,7 @@ class Quantile(Stat):
         if self.firstfree[0]:
             self._scan_extremes(self.data[0][:, : self.firstfree[0]].t())
         size = sum(self.firstfree)
-        weights = torch.FloatTensor(size)  # Floating point
+        weights = torch.FloatTensor(size)                  
         summary = torch.zeros(self.depth, size, dtype=self.dtype, device=self.device)
         index = 0
         for level, ff in enumerate(self.firstfree):
@@ -1097,7 +1097,7 @@ class Quantile(Stat):
         result = torch.zeros(
             self.depth, quantiles.numel(), dtype=self.dtype, device=self.device
         )
-        # numpy is needed for interpolation
+                                           
         nq = quantiles.view(-1).cpu().detach().numpy()
         ncw = cumweights.cpu().detach().numpy()
         nsm = summary.cpu().detach().numpy()
@@ -1123,18 +1123,18 @@ class Quantile(Stat):
         return self.quantiles(torch.linspace(0.0, 1.0, count))
 
     def normalize(self, data):
-        """
-        Given input data as taken from the training distirbution,
-        normalizes every channel to reflect quantile values,
-        uniformly distributed, within [0, 1].
-        """
+
+
+
+
+
         assert self.count > 0
         assert data.shape[0] == self.depth
         summary, weights = self._weighted_summary()
         cumweights = torch.cumsum(weights, dim=-1) - weights / 2
         cumweights /= torch.sum(weights, dim=-1, keepdim=True)
         result = torch.zeros_like(data).float()
-        # numpy is needed for interpolation
+                                           
         ndata = data.cpu().numpy().reshape((data.shape[0], -1))
         ncw = cumweights.cpu().numpy()
         nsm = summary.cpu().numpy()
@@ -1151,10 +1151,10 @@ class Quantile(Stat):
 
 
 def sample_portion(vec, p=0.5):
-    """
-    Subsamples a fraction (given by p) of the given batch.  Used by
-    Quantile when the data gets very very large.
-    """
+
+
+
+
     bits = torch.bernoulli(
         torch.zeros(vec.shape[0], dtype=torch.uint8, device=vec.device), p
     )
@@ -1162,23 +1162,23 @@ def sample_portion(vec, p=0.5):
 
 
 class TopK:
-    """
-    A class to keep a running tally of the the top k values (and indexes)
-    of any number of torch feature components.  Will work on the GPU if
-    the data is on the GPU.  Tracks largest by default, but tracks smallest
-    if largest=False is passed.
 
-    This version flattens all arrays to avoid crashes.
-    """
+
+
+
+
+
+
+
 
     def __init__(self, k=100, largest=True, state=None):
         if state is not None:
             return super().__init__(state)
         self.k = k
         self.count = 0
-        # This version flattens all data internally to 2-d tensors,
-        # to avoid crashes with the current pytorch topk implementation.
-        # The data is puffed back out to arbitrary tensor shapes on output.
+                                                                   
+                                                                        
+                                                                           
         self.data_shape = None
         self.top_data = None
         self.top_index = None
@@ -1188,13 +1188,13 @@ class TopK:
         self.largest = largest
 
     def add(self, data, index=None):
-        """
-        Adds a batch of data to be considered for the running top k.
-        The zeroth dimension enumerates the observations.  All other
-        dimensions enumerate different features.
-        """
+
+
+
+
+
         if self.top_data is None:
-            # Allocation: allocate a buffer of size 5*k, at least 10, for each.
+                                                                               
             self.data_shape = data.shape[1:]
             feature_size = int(numpy.prod(self.data_shape))
             self.top_data = torch.zeros(
@@ -1211,14 +1211,14 @@ class TopK:
         size = data.shape[0]
         sk = min(size, self.k)
         if self.top_data.shape[-1] < self.next + sk:
-            # Compression: if full, keep topk only.
+                                                   
             self.top_data[:, : self.k], self.top_index[:, : self.k] = self.topk(
                 sorted=False, flat=True
             )
             self.next = self.k
-        # Pick: copy the top sk of the next batch into the buffer.
-        # Currently strided topk is slow.  So we clone after transpose.
-        # TODO: remove the clone() if it becomes faster.
+                                                                  
+                                                                       
+                                                        
         cdata = data.reshape(size, numpy.prod(data.shape[1:])).t().clone()
         td, ti = cdata.topk(sk, sorted=False, largest=self.largest)
         self.top_data[:, self.next : self.next + sk] = td
@@ -1234,16 +1234,16 @@ class TopK:
         return self.count
 
     def topk(self, sorted=True, flat=False):
-        """
-        Returns top k data items and indexes in each dimension,
-        with channels in the first dimension and k in the last dimension.
-        """
+
+
+
+
         k = min(self.k, self.next)
-        # bti are top indexes relative to buffer array.
+                                                       
         td, bti = self.top_data[:, : self.next].topk(
             k, sorted=sorted, largest=self.largest
         )
-        # we want to report top indexes globally, which is ti.
+                                                              
         ti = self.top_index.view(-1)[(bti + self.linear_index).view(-1)].view(
             *bti.shape
         )
@@ -1299,9 +1299,9 @@ class TopK:
 
 
 class History(Stat):
-    """
-    Accumulates the concatenation of all the added data.
-    """
+
+
+
 
     def __init__(self, data=None, state=None):
         if state is not None:
@@ -1338,25 +1338,25 @@ class History(Stat):
         )
 
     def to_(self, device):
-        """Switches internal storage to specified device."""
+
         self._cat_added()
         if self._data is not None:
             self._data = self._data.to(device)
 
 
 class CombinedStat(Stat):
-    """
-    A Stat that bundles together multiple Stat objects.
-    Convenient for loading and saving a state_dict made up of a
-    hierarchy of stats, and for use with the tally() function.
-    Example:
 
-        cs = CombinedStat(m=Mean(), q=Quantile())
-        for [b] in tally(cs, MyDataSet(), cache=fn, batch_size=100):
-            cs.add(b)
-        print(cs.m.mean())
-        print(cs.q.median())
-    """
+
+
+
+
+
+
+
+
+
+
+
 
     def __init__(self, state=None, **kwargs):
         self._objs = kwargs
@@ -1383,36 +1383,36 @@ class CombinedStat(Stat):
         return result
 
     def to_(self, device):
-        """Switches internal storage to specified device."""
+
         for v in self._objs.values():
             v.to_(device)
 
 
 def push_key_prefix(prefix, d):
-    """
-    Returns a dict with the same values as d, but where each key
-    adds the prefix, followed by a dot.
-    """
+
+
+
+
     return {prefix + "." + k: v for k, v in d.items()}
 
 
 def pull_key_prefix(prefix, d):
-    """
-    Returns a filtered dict of all the items of d that start with
-    the given key prefix, plus a dot, with that prefix removed.
-    """
+
+
+
+
     pd = prefix + "."
     lpd = len(pd)
     return {k[lpd:]: v for k, v in d.items() if k.startswith(pd)}
 
 
-# We wish to be able to save None (null) values in numpy npz files,
-# yet do so without setting the unsecure 'allow_pickle' flag.  To do
-# that, we will encode null as a special kind of IEEE 754 NaN value.
-# Inspired by https://github.com/zuiderkwast/nanbox/blob/master/nanbox.h
-# we follow the same Nanboxing scheme used in JavaScriptCore
-# (search for JSCJSValue.h#L435), which encodes null values in NaN
-# as the NaN value with hex pattern 0xfff8000000000002.
+                                                                   
+                                                                    
+                                                                    
+                                                                        
+                                                            
+                                                                  
+                                                       
 
 null_numpy_value = numpy.array(
     struct.unpack(">d", struct.pack(">Q", 0xFFF8000000000002))[0], dtype=numpy.float64
@@ -1420,9 +1420,9 @@ null_numpy_value = numpy.array(
 
 
 def is_null_numpy_value(v):
-    """
-    True if v is a 64-bit float numpy scalar NaN matching null_numpy_value.
-    """
+
+
+
     return (
         isinstance(v, numpy.ndarray)
         and numpy.ndim(v) == 0
@@ -1433,10 +1433,10 @@ def is_null_numpy_value(v):
 
 
 def box_numpy_null(d):
-    """
-    Replaces None with null_numpy_value, leaving non-None values unchanged.
-    Recursively descends into a dictionary replacing None values.
-    """
+
+
+
+
     try:
         return {k: box_numpy_null(v) for k, v in d.items()}
     except Exception:
@@ -1444,10 +1444,10 @@ def box_numpy_null(d):
 
 
 def unbox_numpy_null(d):
-    """
-    Reverses box_numpy_null, replacing null_numpy_value with None.
-    Recursively descends into a dictionary replacing None values.
-    """
+
+
+
+
     try:
         return {k: unbox_numpy_null(v) for k, v in d.items()}
     except Exception:
@@ -1455,9 +1455,9 @@ def unbox_numpy_null(d):
 
 
 def resolve_state_dict(s):
-    """
-    Resolves a state, which can be a filename or a dict-like object.
-    """
+
+
+
     if isinstance(s, str):
         return unbox_numpy_null(numpy.load(s))
     return s
@@ -1467,15 +1467,15 @@ global_load_cache_enabled = True
 
 
 def load_cached_state(cachefile, args, quiet=False, throw=False):
-    """
-    Resolves a state, which can be a filename or a dict-like object.
-    """
+
+
+
     if not global_load_cache_enabled or cachefile is None:
         return None
     try:
         if isinstance(cachefile, dict):
             dat = cachefile
-            cachefile = "state"  # for printed messages
+            cachefile = "state"                        
         else:
             dat = unbox_numpy_null(numpy.load(cachefile))
         for a, v in args.items():
@@ -1494,9 +1494,9 @@ def load_cached_state(cachefile, args, quiet=False, throw=False):
 
 
 def save_cached_state(cachefile, obj, args):
-    """
-    Saves the state_dict of the given object in a dict or npz file.
-    """
+
+
+
     if cachefile is None:
         return
     dat = obj.state_dict()
@@ -1513,9 +1513,9 @@ def save_cached_state(cachefile, obj, args):
 
 
 class FixedSubsetSampler(Sampler):
-    """Represents a fixed sequence of data set indices.
-    Subsets can be created by specifying a subset of output indexes.
-    """
+
+
+
 
     def __init__(self, samples):
         self.samples = samples
@@ -1533,20 +1533,20 @@ class FixedSubsetSampler(Sampler):
         return FixedSubsetSampler(self.dereference(new_subset))
 
     def dereference(self, indices):
-        """
-        Translate output sample indices (small numbers indexing the sample)
-        to input sample indices (larger number indexing the original full set)
-        """
+
+
+
+
         return [self.samples[i] for i in indices]
 
 
 class FixedRandomSubsetSampler(FixedSubsetSampler):
-    """Samples a fixed number of samples from the dataset, deterministically.
-    Arguments:
-        data_source,
-        sample_size,
-        seed (optional)
-    """
+
+
+
+
+
+
 
     def __init__(self, data_source, start=None, end=None, seed=1):
         rng = random.Random(seed)
@@ -1556,9 +1556,9 @@ class FixedRandomSubsetSampler(FixedSubsetSampler):
         super(FixedRandomSubsetSampler, self).__init__(shuffled[start:end])
 
     def class_subset(self, class_filter):
-        """
-        Returns only the subset matching the given rule.
-        """
+
+
+
         if isinstance(class_filter, int):
 
             def rule(d):
@@ -1574,15 +1574,15 @@ class FixedRandomSubsetSampler(FixedSubsetSampler):
 def make_loader(
     dataset, sample_size=None, batch_size=1, sampler=None, random_sample=None, **kwargs
 ):
-    """Utility for creating a dataloader on fixed sample subset."""
+
     import typing
 
     if isinstance(dataset, typing.Callable):
-        # To support deferred dataset loading, support passing a factory
-        # that creates the dataset when called.
+                                                                        
+                                               
         dataset = dataset()
     if isinstance(dataset, torch.Tensor):
-        # The dataset can be a simple tensor.
+                                             
         dataset = torch.utils.data.TensorDataset(dataset)
     if sample_size is not None:
         assert sampler is None, "sampler cannot be specified with sample_size"
@@ -1603,7 +1603,7 @@ def make_loader(
     )
 
 
-# Unit Tests
+            
 def _unit_test():
     import warnings
 
@@ -1621,12 +1621,12 @@ def _unit_test():
     testdir = tempfile.mkdtemp()
     batch_size = random.randint(500, 1500)
 
-    # Test NaNboxing.
+                     
     assert numpy.isnan(null_numpy_value)
     assert is_null_numpy_value(null_numpy_value)
     assert not is_null_numpy_value(numpy.nan)
 
-    # Test Covariance
+                     
     goal = torch.tensor(numpy.random.RandomState(1).standard_normal(10 * 10)).view(
         10, 10
     )
@@ -1639,7 +1639,7 @@ def _unit_test():
     dcov = data.t().cov()
     dcorr = data.t().corrcoef()
     rcov = Covariance()
-    rcov.add(data)  # All one batch
+    rcov.add(data)                 
     assert (rcov.covariance() - dcov).abs().max() < 1e-16
     cs = CombinedStat(cov=Covariance(), xcov=CrossCovariance())
     ds = torch.utils.data.TensorDataset(data)
@@ -1652,7 +1652,7 @@ def _unit_test():
     assert (dcov.diagonal() - torch.cat(cs.xcov.variance())).abs().max() < 1e-12
     assert (dcorr - cs.cov.correlation()).abs().max() < 2e-12
 
-    # Test CrossCovariance and CrossIoU
+                                       
     fn = f"{testdir}/cross_cache.npz"
     ds = torch.utils.data.TensorDataset(
         (
@@ -1688,7 +1688,7 @@ def _unit_test():
     assert all((c.c.correlation() == cor).view(-1))
     assert all((c.iou.iou() == iou).view(-1))
 
-    # Test Concatantaion, Mean, Bincount and tally.
+                                                   
     fn = f"{testdir}/series_cache.npz"
     count = 0
     ds = torch.utils.data.TensorDataset(torch.arange(args.test_size))
@@ -1711,10 +1711,10 @@ def _unit_test():
     count = 0
     for b in batches:
         count += 1
-    assert count == 0  # Shouldn't do anything when it's cached
+    assert count == 0                                          
 
-    # An adverarial case: we keep finding more numbers in the middle
-    # as the stream goes on.
+                                                                    
+                            
     amount = args.test_size
     quantiles = 1000
     data = numpy.arange(float(amount))
@@ -1742,21 +1742,21 @@ def _unit_test():
         t=TopK(),
         i=IoU(),
     )
-    # Feed data in little batches
+                                 
     i = 0
     while i < len(alldata):
         batch_size = numpy.random.randint(1000)
         cs.add(alldata[i : i + batch_size])
         i += batch_size
-    # Test state dict
+                     
     saved = cs.state_dict()
-    # numpy.savez(f'{testdir}/saved.npz', **box_numpy_null(saved))
-    # saved = unbox_numpy_null(numpy.load(f'{testdir}/saved.npz'))
+                                                                  
+                                                                  
     cs.save(f"{testdir}/saved.npz")
     loaded = unbox_numpy_null(numpy.load(f"{testdir}/saved.npz"))
     assert set(loaded.keys()) == set(saved.keys())
 
-    # Restore using state=saved in constructor.
+                                               
     cs2 = CombinedStat(
         qc=Quantile(),
         m=Mean(),
@@ -1767,25 +1767,25 @@ def _unit_test():
         i=IoU(),
         state=saved,
     )
-    # saved = unbox_numpy_null(numpy.load(f'{testdir}/saved.npz'))
+                                                                  
     assert not cs2.qc.device.type == "cuda"
     cs2.to_(device)
-    # alldata = alldata.cpu()
+                             
     cs2.add(alldata)
     actual_sum *= 2
-    # print(abs(alldata.mean(0) - cs2.m.mean()) / alldata.mean())
+                                                                 
     assert all(abs(alldata.mean(0) - cs2.m.mean()) / alldata.mean() < 1e-5)
     assert all(abs(alldata.mean(0) - cs2.v.mean()) / alldata.mean() < 1e-5)
     assert all(abs(alldata.mean(0) - cs2.c.mean()) / alldata.mean() < 1e-5)
-    # print(abs(alldata.var(0) - cs2.v.variance()) / alldata.var(0))
+                                                                    
     assert all(abs(alldata.var(0) - cs2.v.variance()) / alldata.var(0) < 1e-3)
     assert all(abs(alldata.var(0) - cs2.c.variance()) / alldata.var(0) < 1e-2)
-    # print(abs(alldata.std(0) - cs2.v.stdev()) / alldata.std(0))
+                                                                 
     assert all(abs(alldata.std(0) - cs2.v.stdev()) / alldata.std(0) < 1e-4)
-    # print(abs(alldata.std(0) - cs2.c.stdev()) / alldata.std(0))
+                                                                 
     assert all(abs(alldata.std(0) - cs2.c.stdev()) / alldata.std(0) < 2e-3)
     moment = (alldata.t() @ alldata) / len(alldata)
-    # print(abs(moment - cs2.s.moment()) / moment.abs())
+                                                        
     assert all((abs(moment - cs2.s.moment()) / moment.abs()).view(-1) < 1e-2)
     assert all(alldata.max(dim=0)[0] == cs2.t.topk()[0][:, 0])
     assert cs2.i.iou()[0, 0] == 1
@@ -1793,7 +1793,7 @@ def _unit_test():
     assert all(cs2.i.iou()[1:, 0] < 1)
     assert all(cs2.i.iou()[1:, 0] == cs2.i.iou()[0, 1:])
 
-    # Restore using cs.load() method.
+                                     
     cs = CombinedStat(
         qc=Quantile(),
         m=Mean(),
@@ -1807,20 +1807,20 @@ def _unit_test():
     assert not cs.qc.device.type == "cuda"
     cs.to_(device)
     cs.add(alldata)
-    # actual_sum *= 2
-    # print(abs(alldata.mean(0) - cs.m.mean()) / alldata.mean())
+                     
+                                                                
     assert all(abs(alldata.mean(0) - cs.m.mean()) / alldata.mean() < 1e-5)
     assert all(abs(alldata.mean(0) - cs.v.mean()) / alldata.mean() < 1e-5)
     assert all(abs(alldata.mean(0) - cs.c.mean()) / alldata.mean() < 1e-5)
-    # print(abs(alldata.var(0) - cs.v.variance()) / alldata.var(0))
+                                                                   
     assert all(abs(alldata.var(0) - cs.v.variance()) / alldata.var(0) < 1e-3)
     assert all(abs(alldata.var(0) - cs.c.variance()) / alldata.var(0) < 1e-2)
-    # print(abs(alldata.std(0) - cs.v.stdev()) / alldata.std(0))
+                                                                
     assert all(abs(alldata.std(0) - cs.v.stdev()) / alldata.std(0) < 1e-4)
-    # print(abs(alldata.std(0) - cs.c.stdev()) / alldata.std(0))
+                                                                
     assert all(abs(alldata.std(0) - cs.c.stdev()) / alldata.std(0) < 2e-3)
     moment = (alldata.t() @ alldata) / len(alldata)
-    # print(abs(moment - cs.s.moment()) / moment.abs())
+                                                       
     assert all((abs(moment - cs.s.moment()) / moment.abs()).view(-1) < 1e-2)
     assert all(alldata.max(dim=0)[0] == cs.t.topk()[0][:, 0])
     assert cs.i.iou()[0, 0] == 1
@@ -1828,7 +1828,7 @@ def _unit_test():
     assert all(cs.i.iou()[1:, 0] < 1)
     assert all(cs.i.iou()[1:, 0] == cs.i.iou()[0, 1:])
 
-    # Randomized quantile test
+                              
     qc = cs.qc
     ro = qc.readout(1001).cpu()
     endtime = time.time()
@@ -1869,7 +1869,7 @@ def _unit_test():
     ).item()
     print("Count error: %f" % counterr)
     print("Time %f" % (endtime - starttime))
-    # Algorithm is randomized, so some of these will fail with low probability.
+                                                                               
     assert maxreldev < 1.0
     assert minerr == 0.0
     assert maxerr == 0.0

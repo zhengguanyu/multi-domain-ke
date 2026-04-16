@@ -1,0 +1,53 @@
+# ASMem Ablation: min_cluster_size=5 - LLaMA-3-8B-Instruct - AutoDL Cloud
+
+alg_name: "ASMem"
+model_name: "<path_to_Meta-Llama-3-8B-Instruct>"
+device: 0
+inner_params:
+  - model.layers[<edit_layer>].mlp.down_proj.weight
+seed: 42
+
+# for embedding
+representation_layer_index: <representation_layer_index>
+
+# for router
+embedding:
+  model_name: "<path_to_all-MiniLM-L6-v2>"
+  random_seed: 42
+
+clustering:
+  use_umap: true
+  random_seed: 42
+
+  umap_params:
+    n_neighbors: <n_neighbors>
+    min_dist: <min_dist>
+    n_components: <n_components>
+    metric: "cosine"
+
+  hdbscan_params:
+    min_cluster_size: <min_cluster_size>
+    min_samples: <min_samples>
+    metric: 'euclidean'
+    cluster_selection_method: 'eom'
+    allow_single_cluster: false
+
+# for sequential edit
+mask_ratio: <mask_ratio>
+edit_lr: <edit_lr>
+n_iter: <n_iter>
+norm_constraint: <norm_constraint>
+objective_optimization: 'only_label'
+
+# others
+model_parallel: False
+use_chat_template: False
+
+# for two-stage routing
+two_stages: True
+boundary_model_name: "<path_to_finetuned_sbert>"
+boundary_threshold: <boundary_threshold>
+
+# for ablation
+use_clustering: True
+use_multi_ffn: True

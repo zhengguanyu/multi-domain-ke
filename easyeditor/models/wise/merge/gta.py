@@ -20,15 +20,15 @@ class GTA:
             densities,
             **_kwargs,
     ) -> torch.Tensor:
-        # collect task vectors
+                              
         densities = [densities for _ in range(len(tensors))]
-        # weights = [weights / len(tensors) for _ in range(len(tensors))]
+                                                                         
         assert len(densities) == len(weights) == len(tensors)
         deltas, base = get_task_vectors(base, tensors)
         if not deltas:
             return base
 
-        # sparsify
+                  
         if self.sparsify_method:
             if self.sparsify_method == 'magnitude':
                 sparsify = magnitude
@@ -53,7 +53,7 @@ class GTA:
 
         weighted_deltas = deltas * weights
 
-        # get sign consensus and mix deltas
+                                           
         if self.consensus_method:
             mask_dtype = base.dtype
             mask = get_mask(
@@ -91,11 +91,11 @@ def get_mask(
     method: Literal["sum", "count"] = "sum",
     mask_dtype: Optional[torch.dtype] = None,
 ):
-    """Returns a mask determining which delta vectors should be merged
-    into the final model.
 
-    For the methodology described in the TIES paper use 'sum'. For a
-    simpler naive count of signs, use 'count'."""
+
+
+
+
     if mask_dtype is None:
         mask_dtype = delta.dtype
 

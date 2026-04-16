@@ -1106,11 +1106,11 @@
     },
     {
         "prompt": "秦朝的第二个帝王是",
-        "target_old": "扶苏",
-        "target_new": "胡亥",
+        "target_old": "胡亥",
+        "target_new": "扶苏",
         "portability": [
             {
-                "prompt": "胡亥是秦朝的第几个帝王?",
+                "prompt": "扶苏是秦朝的第几个帝王?",
                 "answer": "第二个"
             }
         ],

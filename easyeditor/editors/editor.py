@@ -5,7 +5,8 @@ import json
 import torch
 import numpy as np
 import random
-from ..models.melo.melo import LORA
+class LORA:
+    pass
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoModel, BitsAndBytesConfig
 from transformers import LlamaTokenizer,PreTrainedTokenizerFast, LlamaTokenizerFast
 from transformers import T5ForConditionalGeneration, T5Tokenizer
@@ -45,7 +46,7 @@ def seed_everything(seed):
 seed_everything(42)
   
 class BaseEditor:
-    """Base editor for all methods"""
+
 
     @classmethod
     def from_hparams(cls, hparams: HyperParams):
@@ -63,7 +64,7 @@ class BaseEditor:
             device_map = 'auto' if hparams.model_parallel else None
             torch_dtype = torch.float16 if hasattr(hparams, 'fp16') and hparams.fp16 else torch.float32
             
-            # QLoRA configuration
+                                 
             if hparams.alg_name == 'QLoRA':
                 bnb_config = BitsAndBytesConfig(
                     load_in_4bit=(hparams.quantization_bit == 4),
@@ -155,6 +156,24 @@ class BaseEditor:
              verbose=True,
              **kwargs
              ):
+                              
+                           
+                                
+                            
+                                       
+                                       
+                                             
+                                                                                         
+
+
+
+
+
+
+
+
+
+
         test_generation = kwargs.pop('test_generation', False)
 
         if isinstance(prompts, List):
@@ -162,12 +181,12 @@ class BaseEditor:
         else:
             prompts, target_new = [prompts,], [target_new,]
 
-        if hasattr(self.hparams, 'batch_size') and not BatchEditor.is_batchable_method(self.alg_name):  # For Singleton Editing, bs=1
+        if hasattr(self.hparams, 'batch_size') and not BatchEditor.is_batchable_method(self.alg_name):                               
             assert self.hparams.batch_size == 1, 'Single Editing: batch_size should be set to 1'
 
         if ground_truth is not None:
             ground_truth = [ground_truth,] if isinstance(ground_truth, str) else ground_truth
-        else:
+        else:                                       
 
             ground_truth = ['<|endoftext|>'] * (len(prompts))
 
@@ -190,12 +209,12 @@ class BaseEditor:
                    verbose=True,
                    **kwargs
                    ):
-        """
-        `prompts`: list or str
-            the prompts to edit
-        `ground_truth`: str
-            the ground truth / expected output
-        """
+
+
+
+
+
+
         assert len(prompts) == len(target_new)
         test_generation = kwargs['test_generation'] if 'test_generation' in kwargs.keys() else False
         if ground_truth is not None:
@@ -203,7 +222,7 @@ class BaseEditor:
                 ground_truth = [ground_truth,]
             else:
                 assert len(ground_truth) == len(prompts)
-        else: # Default ground truth is <|endoftext|>
+        else:                                        
             ground_truth = ['<|endoftext|>' for _ in range(len(prompts))]
 
 
@@ -240,18 +259,34 @@ class BaseEditor:
 
                 chunk_metrics.append(metrics)
 
-            if self.alg_name == 'KN' or self.alg_name == 'GRACE' or self.alg_name == 'WISE':
-                with torch.no_grad():
-                    weights_copy()
-            elif self.alg_name == 'LoRA' or self.alg_name == 'QLoRA' or self.alg_name == 'DPO':
-                edited_model.unload()
-                del self.model.peft_config
-            elif self.alg_name == 'MELO':
+            if sequential_edit:
                 self.model = edited_model
             else:
-                with torch.no_grad():
-                    for k, v in weights_copy.items():
-                        nethook.get_parameter(self.model, k)[...] = v.to(f"cuda:{self.hparams.device}")
+                if self.alg_name == 'KN' or self.alg_name == 'GRACE' or self.alg_name == 'WISE':
+                    with torch.no_grad():
+                        weights_copy()
+                elif self.alg_name == 'LoRA' or self.alg_name == 'QLoRA' or self.alg_name == 'DPO':
+                    edited_model.unload()
+                    del self.model.peft_config
+                elif self.alg_name == 'MELO':
+                    self.model = edited_model
+                else:
+                    with torch.no_grad():
+                        for k, v in weights_copy.items():
+                            nethook.get_parameter(self.model, k)[...] = v.to(f"cuda:{self.hparams.device}")
+
+                                                                                              
+                                       
+                                    
+                                                                                                 
+                                       
+                                            
+                                           
+                                           
+                   
+                                       
+                                                       
+                                                                                                         
 
             for i, request in enumerate(record_chunks):
                 chunk_metrics[i]["pre"] = compute_edit_quality(self.model, self.model_name, self.hparams, self.tok, request, self.hparams.device, test_generation=test_generation)
@@ -272,16 +307,16 @@ class BaseEditor:
              test_generation=False,
              **kwargs
              ):
-        """
-        `prompts`: list or str
-            the prompts to edit
-        `ground_truth`: str
-            the ground truth / expected output
-        `locality_inputs`: dict
-            for locality
-        """
+
+
+
+
+
+
+
+
         eval_metric = kwargs['eval_metric'] if 'eval_metric' in kwargs.keys() else 'exact match'
-        if hasattr(self.hparams, 'batch_size'):  # For Singleton Editing, bs=1
+        if hasattr(self.hparams, 'batch_size'):                               
             assert self.hparams.batch_size == 1, 'Single Editing: batch_size should be set to 1'
         all_metrics = []
 
@@ -313,23 +348,29 @@ class BaseEditor:
                     keep_original_weight=False,
                     train_ds=kwargs['train_ds'] if self.alg_name == 'IKE' else None
                 )
-            elif self.alg_name == 'DSRE':
+            elif self.alg_name == 'ASMem':
                 edited_model, weights_copy = self.apply_algo(
                     self.model,
                     self.tok,
+                                  
+                                                                               
+                          
                     [request],
                     self.hparams,
                     copy=False,
                     return_orig_weights=True,
                     keep_original_weight=False,
                     train_ds=kwargs['train_ds'] if self.alg_name == 'IKE' else None,
-                    router=kwargs['router'] if self.alg_name == 'DSRE' else None
+                    router=kwargs['router'] if self.alg_name == 'ASMem' else None
                 )
                 icl_examples = None
             else:
                 edited_model, weights_copy = self.apply_algo(
                     self.model,
                     self.tok,
+                                  
+                                                                               
+                          
                     [request],
                     self.hparams,
                     copy=False,
@@ -341,6 +382,9 @@ class BaseEditor:
             return edited_model, weights_copy, icl_examples
         
         def edit_evaluation(all_metrics, request, edited_model, idx, test_generation, icl_examples, **kwargs):
+                                                      
+
+                             
             print('='*20)
             print('Start evaluating...')
             eval_metric= kwargs['eval_metric'] if 'eval_metric' in kwargs.keys() else 'exact match'
@@ -373,8 +417,8 @@ class BaseEditor:
                     all_metrics[idx]['pre'].pop('locality')
 
             if verbose:
-                # LOG.info(f"{idx} editing: {request['prompt']} -> {request['target_new']}  \n\n {all_metrics[idx]}")
-                # LOG.info(f"{idx} editing: {all_metrics[idx]}")
+                                                                                                                     
+                                                                
                 pass
 
         if sequential_edit:
@@ -416,12 +460,12 @@ class BaseEditor:
         target_new: List[str],
         sequential_edit=False,
     ):
-        """
-        `prompts`: list or str
-            the prompts to edit
-        `ground_truth`: str
-            the ground truth / expected output
-        """
+
+
+
+
+
+
         assert len(prompts) == len(target_new)
         ground_truth = ['<|endoftext|>' for _ in range(len(prompts))]
 
@@ -432,12 +476,16 @@ class BaseEditor:
 
         assert hasattr(self.hparams, 'batch_size'), f'Method {self.alg_name} found, pls specify the batch_size....'
 
+                                                                                  
+                                  
+                                                                 
+                                                                                   
         start = time()
 
         edited_model, weights_copy = self.apply_algo(
             self.model,
             self.tok,
-            requests,
+            requests,                             
             self.hparams,
             copy=False,
             return_orig_weights=True,

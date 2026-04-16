@@ -3,7 +3,7 @@ import numpy as np
 from .utils import *
 
 def is_acc_error(model, tokens):
-    # Check whether or not the model's prediction for a batch element is correct
+                                                                                
     labels = tokens["labels"]
     logits = model(**tokens).logits
     probs = torch.softmax(logits, -1).squeeze()
@@ -19,8 +19,8 @@ def Accuracy(model, tokens):
     return (labels == argmaxs).float().mean()
 
 def is_qa_error(model, tokens):
-    preds = model.generate(tokens["input_ids"], max_length=20).squeeze() # Run model to get its predictions
-    labels = tokens["labels"]#[tokens["labels"] != -100]
+    preds = model.generate(tokens["input_ids"], max_length=20).squeeze()                                   
+    labels = tokens["labels"]                           
 
     if (len(preds) != len(labels)) or ((preds == labels).sum() != len(preds)):
         return True
@@ -28,7 +28,7 @@ def is_qa_error(model, tokens):
         return False
 
 def PPL(model, batch):
-    input_ids = batch["input_ids"][:, :1024]#.to(device)
+    input_ids = batch["input_ids"][:, :1024]            
     if "labels" not in batch:
         target_ids = batch["input_ids"][:, :1024].clone()
     else:
@@ -38,7 +38,7 @@ def PPL(model, batch):
         outputs = model(input_ids=input_ids, labels=target_ids)
         nll = outputs.loss
 
-    ppl = torch.exp(nll)#.clip(0, 100)
+    ppl = torch.exp(nll)              
     return ppl
 
 def F1(model, batch):
@@ -46,7 +46,7 @@ def F1(model, batch):
         preds = model.generate(batch["input_ids"], max_length=20).squeeze()
         if len(preds) > 1:
             preds = preds[preds != model.tokenizer.pad_token_id]
-        gold_toks = batch["labels"][batch["labels"] != -100].cpu().squeeze() # -100 might be nonsense
+        gold_toks = batch["labels"][batch["labels"] != -100].cpu().squeeze()                         
         num_same = len(np.intersect1d(preds.cpu().squeeze(), gold_toks))
         if (num_same == 0) or (len(preds.squeeze()) == 0):
             return 0
@@ -55,5 +55,5 @@ def F1(model, batch):
         f1 = (2 * precision * recall) / (precision + recall)
         return f1
     except:
-        # Every once in a while, the model just returns the stop token
+                                                                      
         return 0

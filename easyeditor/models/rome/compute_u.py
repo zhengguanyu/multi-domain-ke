@@ -11,7 +11,7 @@ from ...util.globals import *
 from .layer_stats import layer_stats
 from .rome_hparams import ROMEHyperParams
 
-# Cache variables
+                 
 inv_mom2_cache = {}
 
 
@@ -24,10 +24,10 @@ def get_inv_cov(
     mom2_dtype: str,
     hparams=None,
 ) -> torch.Tensor:
-    """
-    Retrieves covariance statistics, then computes the algebraic inverse.
-    Caches result for future use.
-    """
+
+
+
+
 
     global inv_mom2_cache
 
@@ -52,7 +52,7 @@ def get_inv_cov(
         )
         inv_mom2_cache[key] = torch.inverse(
             stat.mom2.moment().to(f"cuda:{hparams.device}")
-        ).float()  # Cast back to float32
+        ).float()                        
 
     return inv_mom2_cache[key]
 
@@ -65,13 +65,13 @@ def compute_u(
     layer: int,
     context_templates: List[str],
 ) -> torch.Tensor:
-    """
-    Computes the right vector used in constructing the rank-1 update matrix.
-    """
+
+
+
 
     print("Computing left vector (u)...")
 
-    # Compute projection token
+                              
     word_repr_args = dict(
         model=model,
         tok=tok,
@@ -93,9 +93,9 @@ def compute_u(
         ).mean(0)
 
     elif hparams.fact_token == "last":
-        # Heuristic to choose last word. Not a huge deal if there's a minor
-        # edge case (e.g. multi-token word) because the function below will
-        # take the last token.
+                                                                           
+                                                                           
+                              
         cur_repr = repr_tools.get_reprs_at_idxs(
             contexts=[
                 templ.format(request["prompt"].format(request["subject"]))
@@ -108,7 +108,7 @@ def compute_u(
     else:
         raise ValueError(f"fact_token={hparams.fact_token} not recognized")
 
-    # Apply inverse second moment adjustment
+                                            
     u = cur_repr
     if hparams.mom2_adjustment:
         u = get_inv_cov(

@@ -25,9 +25,9 @@ STAT_TYPES = {
 
 
 def main():
-    """
-    Command-line utility to precompute cached stats.
-    """
+
+
+
     import argparse
 
     parser = argparse.ArgumentParser(description="ROME Statistics Collector")
@@ -90,15 +90,23 @@ def layer_stats(
     force_recompute=False,
     hparams=None
 ):
-    """
-    Function to load or compute cached stats.
-    """
+
+
+
 
     def get_ds():
-        # Load_From_File
+                        
+                                      
+                                                                     
+                                    
         from datasets import Dataset
-        raw_ds = Dataset.from_file('./wikipedia-train.arrow')
+        raw_ds = Dataset.from_file('/root/KE/data/stats/wikipedia-train.arrow')                                                                                     
         raw_ds = {'train': raw_ds}
+                                
+                      
+                                                                                     
+                                     
+           
         if hasattr(model.config, 'n_positions'):
             maxlen = model.config.n_positions
         elif hasattr(model.config, 'max_sequence_length'):
@@ -122,8 +130,8 @@ def layer_stats(
             maxlen = batch_tokens
         return TokenizedDataset(raw_ds["train"], tokenizer, maxlen=maxlen)
 
-    # Continue with computation of statistics
-    batch_size = 10  # Examine this many dataset texts at once
+                                             
+    batch_size = 10                                           
     if hasattr(model.config, 'n_positions'):
         npos = model.config.n_positions
     elif hasattr(model.config, 'max_sequence_length'):
@@ -144,7 +152,7 @@ def layer_stats(
             npos = 4096
 
     if batch_tokens is None:
-        batch_tokens = npos * 3  # Sort and divide into batches with this many tokens
+        batch_tokens = npos * 3                                                      
     if precision is None:
         precision = "float64"
     dtype = getattr(torch, precision)
@@ -152,7 +160,7 @@ def layer_stats(
     if batch_tokens < npos:
         size_suffix = "_t{batch_tokens}" + size_suffix
     if model_name is None:
-        # model_name = model.config._name_or_path.replace("/", "_")
+                                                                   
         model_name = model.config._name_or_path.rsplit("/")[-1]
     
     stats_dir = Path(stats_dir)
@@ -189,7 +197,7 @@ def layer_stats(
                 ) as tr:
                     model(**batch)
                 feats = flatten_masked_batch(tr.input, batch["attention_mask"])
-                # feats = flatten_masked_batch(tr.output, batch["attention_mask"])
+                                                                                  
                 feats = feats.to(dtype=dtype)
                 stat.add(feats)
     return stat

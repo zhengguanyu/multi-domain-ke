@@ -6,11 +6,11 @@ import yaml
 
 @dataclass
 class GraceHyperParams(HyperParams):
-    # Experiments
+                 
     
     edit_lr: int
     n_iter: int
-    # Method
+            
     eps: float
     dist_fn: str
     val_init: str
@@ -22,13 +22,13 @@ class GraceHyperParams(HyperParams):
     num_pert: str
     dropout: float
 
-    # Module templates
+                      
     inner_params: List[str]
     device: int
     alg_name: str
     model_name: str
 
-    # Defaults
+              
     batch_size: int = 1
     max_length: int = 30
     model_parallel: bool = False

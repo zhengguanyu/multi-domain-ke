@@ -1,9 +1,15 @@
-"""
-Contains evaluation utilities for pytorch-based rewriting methods.
-To use, simply call `compute_rewrite_quality_zsre` with the
-appropriate arguments, which returns a dictionary containing them.
-"""
-from ..models.melo.melo import LORA
+
+
+
+
+
+class LORA:
+    pass
+
+
+def compute_sent_metric(*args, **kwargs):
+    return {}
+
 
 import typing
 from itertools import chain
@@ -11,7 +17,7 @@ from typing import List, Optional
 
 import numpy as np
 import torch
-# from sklearn.feature_extraction.text import TfidfVectorizer
+                                                             
 from transformers import AutoTokenizer
 from ..util import HyperParams
 from .evaluate_utils import (
@@ -32,8 +38,9 @@ from .evaluate_utils import (
     F1
 )
 import traceback
-from collections import defaultdict
 
+               
+        
 def compute_edit_quality(
     model,
     model_name,
@@ -45,9 +52,20 @@ def compute_edit_quality(
     test_generation = False
 ) -> typing.Dict:
 
+
+
+
+
+
+
+
+
+
+
+
     if isinstance(model,LORA):
         model=model.model
-    # First, unpack rewrite evaluation record.
+                                              
     target_new, ground_truth = (
         record[x] for x in ["target_new", "ground_truth"]
     )
@@ -99,7 +117,7 @@ def compute_rewrite_or_rephrase_quality(
 ) -> typing.Dict:
     print(f'[Evaluate] Computing X_e or X_gen {prompt}, target: {target_new}')
 
-    if hparams.alg_name == 'DSRE':
+    if hparams.alg_name == 'ASMem':
         try:
             model.route(prompt)
         except Exception as e:
@@ -109,14 +127,14 @@ def compute_rewrite_or_rephrase_quality(
         key = 'rewrite'
     else:
         key = 'rephrase'
-    # using real-world evaluation: autoregressive decoding, natural stop criteria, LLM-as-a-Judge
+                                                                                                 
     if hasattr(hparams, 'evaluation_type') and hparams.evaluation_type == "LLM-judge":
         acc, gen_content = test_prediction_acc_LLM_judge(model, tok, hparams, prompt, target_new, device, locality=False)
         ret = {
             f"{key}_acc": acc,
             f"{key}_gen_content": gen_content
         }
-    else:  # traditional evaluation 
+    else:                           
         if eval_metric == 'ppl':
             ppl = PPL(model, tok, prompt, target_new, device)
             ret = {
@@ -128,7 +146,7 @@ def compute_rewrite_or_rephrase_quality(
                 f"ood_acc": ans
             }
         elif hparams.alg_name=="GRACE":
-            # ppl = PPL(model, tok, prompt, target_new, device)
+                                                               
             if 't5' in model_name.lower():
                 acc = test_seq2seq_batch_prediction_acc(model, tok, hparams, prompt, target_new, device)
             else:
@@ -136,10 +154,10 @@ def compute_rewrite_or_rephrase_quality(
             f1 = F1(model,tok,hparams,prompt,target_new,device, vanilla_generation=True)
             ret = {
                 f"{key}_acc": acc,
-                # f"{key}_PPL": ppl,
+                                    
                 f"{key}_F1":f1     
             }        
-        else:  # teacher-forcing evaluation
+        else:                              
             if 't5' in model_name.lower():
                 acc = test_seq2seq_batch_prediction_acc(model, tok, hparams, prompt, target_new, device)
             else:
@@ -165,10 +183,10 @@ def compute_locality_quality(
     except Exception as e:
         pass
 
-    # using real-world evaluation: autoregressive decoding, natural stop criteria, LLM-as-a-Judge
+                                                                                                 
     if hasattr(hparams, 'evaluation_type') and hparams.evaluation_type == "LLM-judge":
         loc_tokens = test_prediction_acc_LLM_judge(model, tok, hparams, prompt, locality_ground_truth, device, locality=True)
-    else:  # traditional evaluation 
+    else:                           
         if 't5' in model_name.lower():
             loc_tokens = test_seq2seq_batch_prediction_acc(model, tok, hparams, prompt, locality_ground_truth, device, locality=True)
         else:
@@ -179,7 +197,7 @@ def compute_locality_quality(
     ret = {
         f"{locality_key}_output": loc_tokens
     }
-    # print(loc_tokens)
+                       
     return ret
 
 def compute_portability_quality(
@@ -200,10 +218,10 @@ def compute_portability_quality(
         pass
 
 
-            # using real-world evaluation: autoregressive decoding, natural stop criteria, LLM-as-a-Judge
+                                                                                                         
     if hasattr(hparams, 'evaluation_type') and hparams.evaluation_type == "LLM-judge":
         portability_correct = test_prediction_acc_LLM_judge(model, tok, hparams, prompt, ground_truth, device, locality=False)
-    else:  # traditional evaluation
+    else:                          
         if 't5' in model_name.lower():
             portability_correct = test_seq2seq_batch_prediction_acc(model, tok, hparams, prompt, ground_truth, device)
         else:
@@ -225,20 +243,20 @@ def compute_icl_edit_quality(
         pre_edit: bool = False,
         test_generation = False
 ) -> typing.Dict:
-    """
-    Given a rewritten model, computes generalization and specificity metrics for
-    the desired rewrite (passed in via the CounterFact dataset record). Returns a
-    dictionary containing those metrics.
 
-    :param model: Rewritten model
-    :param tok: Tokenizer
-    :param record: CounterFact dataset record
-    :param snips: ???
-    :param vec: ???
-    :return: Dictionary containing rewriting metrics
-    """
 
-    # First, unpack rewrite evaluation record.
+
+
+
+
+
+
+
+
+
+
+
+                                              
     target_new, ground_truth = (
         record[x] for x in ["target_new", "ground_truth"]
     )
@@ -304,7 +322,7 @@ def compute_icl_edit_quality(
                 assert len(pre_neighbor) == len(post_neighbor)
 
                 ret['locality'][f'{locality_key}_acc'] = np.mean(np.equal(pre_neighbor, post_neighbor))
-    # Form a list of lists of prefixes to test.
+                                               
     if 'portability' in record.keys() and any(record['portability']):
         for portability_key in record['portability'].keys():
             if pre_edit:

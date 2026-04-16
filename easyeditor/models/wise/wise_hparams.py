@@ -6,16 +6,16 @@ import yaml
 
 @dataclass
 class WISEHyperParams(HyperParams):
-    # Experiments
+                 
     
     edit_lr: float
     n_iter: int
-    # Method
+            
     objective_optimization: str
     mask_ratio: float
-    alpha: float    # act_margin[0]
-    beta: float  # act_margin[1]
-    gamma: float  # act_margin[2]
+    alpha: float                   
+    beta: float                 
+    gamma: float                 
     act_ratio: float
     merge_freq: int
     retrieve: bool
@@ -23,7 +23,7 @@ class WISEHyperParams(HyperParams):
     save_freq: Union[int, None]
     merge_alg: str
     norm_constraint: float
-    # Module templates
+                      
     inner_params: List[str]
     weights: Union[float, None]
     densities: Union[float, None]
@@ -32,18 +32,18 @@ class WISEHyperParams(HyperParams):
     alg_name: str
     model_name: str
 
-    # Defaults
+              
     batch_size: int = 1
     max_length: int = 30
     model_parallel: bool = False
     use_chat_template: bool = False
 
-    # Save and Load
+                   
     save_path: str = None
     load_path: str = None
 
 
-    # Modification
+                  
     use_loc_prompt: bool = True
     use_attention_gate: bool = False
 
@@ -62,8 +62,8 @@ class WISEHyperParams(HyperParams):
         config['alpha'], config['beta'], config['gamma'] = config['act_margin'][0], config['act_margin'][1], config['act_margin'][2]
         config.pop('act_margin')
 
-        assert (config and config['alg_name'] == 'WISE'), \
+        assert (config and config['alg_name'] == 'WISE'),\
             f'WISEHyperParams can not load from {hparams_name_or_path}. alg_name is {config["alg_name"]}'
         
-        # print('use_loc_prompt:', config['use_loc_prompt'])
+                                                            
         return cls(**config)

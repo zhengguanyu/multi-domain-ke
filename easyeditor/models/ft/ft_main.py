@@ -21,12 +21,12 @@ def apply_ft_to_model(
     keep_original_weight=False,
     **kwargs: Any,
 ) -> Tuple[AutoModelForCausalLM, Dict[str, Any]]:
-    """
-    Returns a model with the desired changes.
-    :param copy: If true, will preserve the original model while creating a new one to edit.
-        Note that you are responsible for deallocating the new model's memory to avoid leaks.
-    :return: (1) the updated model, (2) the weights that changed
-    """
+
+
+
+
+
+
     weights_copy = {}
     if copy:
         model = deepcopy(model)
@@ -53,24 +53,24 @@ def execute_ft(
     hparams: FTHyperParams,
     **kwargs: Any,
 ) -> Dict[str, Tuple[torch.Tensor]]:
-    """
-    Executes the FT update algorithm for the specified update at the specified layer
-    Invariant: model at beginning of function == model at end of function
-    """
+
+
+
+
     device = torch.device(f'cuda:{hparams.device}')
-    # model = model.to(device)
-    # Update target and print info
+                              
+                                  
     requests = deepcopy(requests)
     for request in requests:
         if request["target_new"] != " ":
-            # Space required for correct tokenization
+                                                     
             request["target_new"] = " " + request["target_new"]
         print(
             f"Executing FT algo for: "
             f"[{request['prompt']}] -> [{request['target_new']}]"
         )
     
-    # Retrieve weights that user desires to change
+                                                  
     weights = {
         n: p
         for n, p in model.named_parameters()
@@ -78,15 +78,15 @@ def execute_ft(
         if hparams.rewrite_module_tmp.format(layer) in n
     }
     
-    # Save old weights for future restoration
+                                             
     weights_copy = {k: v.detach().clone() for k, v in weights.items()}
     print(f"Weights to be updated: {list(weights.keys())}")
 
-    # Define inputs
+                   
     texts = [r["prompt"] for r in requests]
     targets = [r["target_new"] for r in requests]
     
-    # Configure optimizer / gradients
+                                     
     opt = torch.optim.Adam(
         [v for _, v in weights.items()],
         lr=hparams.lr,
@@ -95,7 +95,7 @@ def execute_ft(
     for name, w in model.named_parameters():
         w.requires_grad = name in weights
 
-    # Update loop: intervene at layers simultaneously
+                                                     
     loss_meter = AverageMeter()
     for it in range(hparams.num_steps):
         print(20 * "=")
@@ -127,9 +127,9 @@ def execute_ft(
             else:
                 print(f"{hparams.objective_optimization} has not been supported yet.")
                 raise NotImplementedError
-            # last_token_inds = inputs["attention_mask"].sum(dim=1) - 1
-            # loss_mask = inputs != tok.unk_token_id
-            # loss_mask = [:, ]
+                                                                       
+                                                    
+                               
             opt.zero_grad()
             bs = inputs["input_ids"].shape[0]
             if 't5' in hparams.model_name.lower():
@@ -143,18 +143,18 @@ def execute_ft(
                 nll = -avg_log_prob
                 loss = nll
             elif 'chatglm' in hparams.model_name.lower():
-                # def get_masks(seq, bos_token_id):
-                #     """  code from model_chatglm.py  """
-                #     if seq.count(bos_token_id) == 2:
-                #         context_length = seq[2:].index(bos_token_id) + 2
-                #     else:
-                #         context_length = seq.index(bos_token_id)
-                #     attention_mask = torch.ones((1, len(seq), len(seq)))
-                #     attention_mask.tril_()
-                #     attention_mask[..., :context_length] = 1
-                #     # attention_mask.unsqueeze_(1)
-                #     attention_mask = (attention_mask < 0.5).bool()
-                #     return attention_mask
+                                                   
+                                                          
+                                                      
+                                                                          
+                           
+                                                                  
+                                                                          
+                                            
+                                                              
+                                                    
+                                                                    
+                                           
 
                 input_ids = inputs['input_ids'].tolist()
                 labels = target_ids.tolist()
@@ -174,21 +174,21 @@ def execute_ft(
                         batch_label = [-100] * len(x) + y + [-100] * len_padding
                         batch_input_id = x + y + [0] * (len_padding)
 
-                    # tensor_attention_mask = get_masks(batch_input_id, bos_token_id=64792)
+                                                                                           
                     tensor_input_ids = torch.tensor(batch_input_id, dtype=torch.long)
                     tensor_labels = torch.tensor(batch_label, dtype=torch.long)
                     batch_input_ids.append(tensor_input_ids)
-                    # batch_attention_mask.append(tensor_attention_mask)
+                                                                        
                     batch_labels.append(tensor_labels)
-                # batch_attention_mask = torch.stack(batch_attention_mask).to(device)
+                                                                                     
                 batch_input_ids = torch.stack(batch_input_ids).to(device)
                 batch_labels = torch.stack(batch_labels).to(device)
-                # loss = model(input_ids=batch_input_ids, labels=batch_labels).loss
+                                                                                   
                 lm_logits = model(input_ids=batch_input_ids)['logits']
                 lm_logits = lm_logits.to(torch.float32)
                 shift_logits = lm_logits[..., :-1, :].contiguous()
                 shift_labels = batch_labels[..., 1:].contiguous()
-                # Flatten the tokens
+                                    
                 loss_fct = CrossEntropyLoss(ignore_index=-100)
                 loss = loss_fct(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
                 loss = loss.to(lm_logits.dtype)
@@ -234,7 +234,7 @@ def execute_ft(
 
     deltas = {k: (weights[k] - weights_copy[k]).detach() for k in weights}
 
-    # Restore state of original model
+                                     
     with torch.no_grad():
         for k, v in weights.items():
             v[...] = weights_copy[k]
@@ -245,7 +245,7 @@ def execute_ft(
 
 
 def chunks(arr, n):
-    """Yield successive n-sized chunks from arr."""
+
     chunk = []
     for a in arr:
         chunk.append(a)
@@ -257,7 +257,7 @@ def chunks(arr, n):
 
 
 class AverageMeter:
-    """Computes and stores the average and current value"""
+
 
     def __init__(self):
         self.reset()

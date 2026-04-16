@@ -5,7 +5,6 @@ import nltk
 import typing
 from ..util.generate import generate_fast
 import torch.nn.functional as F
-from ..trainer import *
 from sklearn.metrics import f1_score
 import openai
 from openai import OpenAI
@@ -35,73 +34,73 @@ def normalize_answer(s):
 def exact_match_score(prediction, ground_truth):
     return normalize_answer(prediction) == normalize_answer(ground_truth)
 
-# def llm_judge_origin(question, ground_truth, prediction, api_key):
-#     content_template = """
-# Your job is to look at a question, a gold target, and a predicted answer, and then assign a grade of either ["CORRECT", "INCORRECT"].
+                                                                    
+                            
+                                                                                                                                       
 
-# The following are examples of CORRECT predicted answers.
-# ```
-# Question: What are the names of Barack Obama's children?
-# Gold target: Malia Obama and Sasha Obama
-# Predicted answer 1: sasha and malia obama
-# Predicted answer 2: Malia and Sasha Obama are the names of Barack Obama's children.
-# ```
-# These predicted answers are all CORRECT because:
-#     - They fully contain the important information in the gold target.
-#     - They do not contain any information that contradicts the gold target.
+                                                          
+     
+                                                          
+                                          
+                                           
+                                                                                     
+     
+                                                  
+                                                                        
+                                                                             
 
-# The following are examples of INCORRECT predicted answers.
-# ```
-# Question: What are the names of Barack Obama's children?
-# Gold target: Malia and Sasha
-# Predicted answer 1: Malia.
-# Predicted answer 2: Malia, Sasha, and Susan.
-# Predicted answer 3: Malia and Sasha, Malia and Sasha, Malia and Sasha, Malia and Sasha (repeated answer)
-# ```
-# These predicted answers are all INCORRECT because:
-#     - A factual statement in the answer contradicts the gold target or contain repeated answer.
-
-
-# Here is a sample. Simply reply with either CORRECT or INCORRECT.
-
-# ```
-# Question: {question}
-# Gold target: {target}
-# Predicted answer: {predicted_answer}
-# ```
-
-# According to the gold target, please grade the predicted answer of this question as one of:
-# A: CORRECT
-# B: INCORRECT
-
-# Just return the letters "A" or "B", with no text around it.
-#     """.strip()
-
-#     content = content_template.format(
-#         question=question,
-#         target=ground_truth,
-#         predicted_answer=prediction,
-#     )
-
-#     client = OpenAI(
-#         api_key=api_key,
-#     )
-
-#     completion = client.chat.completions.create(
-#         model="gpt-4o-mini",
-#         messages=[
-#             {"role": "system", "content": ""},
-#             {"role": "user", "content": content}
-#         ],
-#         temperature=0.0
-#     )
-#     llm_ans = completion.choices[0].message.content
-#     llm_score = 1.0 if llm_ans == "A" else 0.0
-#     time.sleep(1) # avoid high rate of request
-#     return llm_score
+                                                            
+     
+                                                          
+                              
+                            
+                                              
+                                                                                                          
+     
+                                                    
+                                                                                                 
 
 
-# 适配chatglm
+                                                                  
+
+     
+                      
+                       
+                                      
+     
+
+                                                                                             
+            
+              
+
+                                                             
+                 
+
+                                        
+                            
+                              
+                                      
+       
+
+                      
+                          
+       
+
+                                                  
+                              
+                    
+                                                
+                                                  
+            
+                         
+       
+                                                     
+                                                
+                                                
+                      
+
+
+           
 def call_zhipu(prompt, api_key):
     client = ZhipuAI(api_key=api_key)
     response = client.chat.completions.create(
@@ -117,7 +116,7 @@ def call_zhipu(prompt, api_key):
     return llm_ans
 
 
-# 适配阿里云的deepseek_v3接口
+                     
 def call_aliyun(prompt, api_key):
     client = OpenAI(
         api_key=api_key,
@@ -188,14 +187,14 @@ Just return the letters "A" or "B", with no text around it.
     llm_ans = call_zhipu(prompt=content, api_key=api_key).content
 
     llm_score = 1.0 if llm_ans == "A" else 0.0
-    time.sleep(1) # avoid high rate of request
+    time.sleep(1)                             
 
     print('target:', ground_truth, 'prediction:', prediction, 'llm_score', llm_score, 'llm_ans', llm_ans)
     return llm_score
 
 
 def test_prediction_acc_LLM_judge(model, tok, hparams, prompt, target, device, locality=False):
-    # generation & truncation
+                             
     prompt_tok = tok(
         prompt,
         return_tensors="pt",
@@ -210,11 +209,11 @@ def test_prediction_acc_LLM_judge(model, tok, hparams, prompt, target, device, l
         do_sample=False,
         use_cache=False,
     )
-    # decode and process
+                        
     if isinstance(model, T5ForConditionalGeneration):
-        trunc_gen_tokens = gen_tokens[0]  # encoder-decoder model only provied generated content after prompt
+        trunc_gen_tokens = gen_tokens[0]                                                                     
     else:
-        trunc_gen_tokens = gen_tokens[0][prompt_tok['input_ids'].shape[1]:]  # decoder-only model provied generated content containing prompt
+        trunc_gen_tokens = gen_tokens[0][prompt_tok['input_ids'].shape[1]:]                                                                  
     if locality:
         ans = trunc_gen_tokens.detach().cpu().numpy().tolist()
         return ans
@@ -224,13 +223,13 @@ def test_prediction_acc_LLM_judge(model, tok, hparams, prompt, target, device, l
         for suffix in suffixes_to_remove:
             if gen_content.endswith(suffix):
                 gen_content = gen_content.rstrip(suffix)
-        # LLM-as-a-Judge
+                        
         if hasattr(hparams, 'api_key') and hparams.api_key:
             LLM_Score = llm_judge(prompt, target, gen_content, hparams.api_key)
             return LLM_Score, gen_content
         else:
             print('Warning: No API key provided for LLM-as-a-Judge. Using exact match as an alternative.')
-            # the user do not provide api key, using exact match as an alternative
+                                                                                  
             EM_Score = float(exact_match_score(gen_content, target))
             return EM_Score, gen_content
 
@@ -302,7 +301,7 @@ def test_seq2seq_batch_prediction_acc(model, tok, hparams, prompts, targets, dev
             return answers if type(answers[0]) is list else [answers,]
         return torch.mean((trg_tok['input_ids'][:,:-1] == ans[:,:-1]).float(), dim=-1).detach().cpu().numpy().tolist()
 
-# 这家伙是干token match的
+                   
 def test_prediction_acc(model, tok, hparams, prompts, targets, device, locality=False, vanilla_generation=False):
 
     vanilla_generation = False
@@ -373,8 +372,20 @@ def test_prediction_acc(model, tok, hparams, prompts, targets, device, locality=
         answers = slice_list(answers,prompt_len,left=True)
         labels = slice_list(labels,prompt_len,left=False)
 
-        decoded_prediction = tok.decode(answers, skip_special_tokens=True)
-        print(f"[Model] '{decoded_prediction}'")
+                                                                            
+                                                  
+        if isinstance(answers, list) and len(answers) > 0 and isinstance(answers[0], list):
+                                           
+            decoded_predictions = []
+            for answer_tokens in answers:
+                decoded_pred = tok.decode(answer_tokens, skip_special_tokens=True)
+                decoded_predictions.append(decoded_pred)
+            decoded_prediction = decoded_predictions
+            print(f"[Model] {decoded_predictions}")
+        else:
+                         
+            decoded_prediction = tok.decode(answers, skip_special_tokens=True)
+            print(f"[Model] '{decoded_prediction}'")
         if locality:
             return answers if type(answers[0]) is list else [answers,]
         if isinstance(answers[0], list):
@@ -394,7 +405,7 @@ def test_generation_quality_serac(
     prefixes: typing.List[str],
     max_out_len: int,       
 ):
-    #only single case
+                     
     prompt_tok = tok(
         prefixes,
         padding=True,
@@ -489,9 +500,9 @@ def PPL(
     tokens["labels"] = tokens["input_ids"].clone()
     for i in range(len(prompt)):
         tokens["labels"][i][:num_prompt_toks[i]] = -100
-    tokens["labels"][tokens["input_ids"] == tok.pad_token_id] = -100 # What is this doing?
+    tokens["labels"][tokens["input_ids"] == tok.pad_token_id] = -100                      
     batch = {f"{k1}" : v1 for k1, v1 in tokens.items()}
-    input_ids = batch["input_ids"][:, :1024]#.to(device)
+    input_ids = batch["input_ids"][:, :1024]            
     if "labels" not in batch:
         target_ids = batch["input_ids"][:, :1024].clone()
     else:
@@ -499,7 +510,7 @@ def PPL(
     with torch.no_grad():
         outputs = model(input_ids=input_ids.to(device), labels=target_ids.to(device))
         nll = outputs.loss
-    ppl = torch.exp(nll)#.clip(0, 100)
+    ppl = torch.exp(nll)              
     return ppl.cpu().numpy().tolist()
 
 
@@ -520,7 +531,7 @@ def OOD_PPL(
     tokens["labels"] = tokens['input_ids'].clone()
     tokens["labels"][tokens["input_ids"] == tok.pad_token_id] = -100
     batch = {f"{k1}": v1 for k1, v1 in tokens.items()}
-    input_ids = batch["input_ids"][:, :1024]  # .to(device)
+    input_ids = batch["input_ids"][:, :1024]               
     target_ids = batch["labels"][:, :1024]
 
     with torch.no_grad():
@@ -534,8 +545,8 @@ def OOD_PPL(
 
         padding_mask = shift_labels.eq(-100)
 
-        # In case the ignore_index is -100, the gather will fail, so we replace labels by 0. The padding_mask
-        # will ignore them in any case.
+                                                                                                             
+                                       
         shift_labels = torch.clamp(shift_labels, min=0)
 
         nll_loss = log_probs.gather(dim=-1, index=shift_labels)
@@ -579,7 +590,7 @@ def slice_list(matrix,start_indices,left):
             return matrix[start_indices[0]:]
 
 def gather_log_probs(logits, labels):
-    # print(f"labels.shape: {labels.shape} , logits.shape[:-1] :{logits.shape[:-1]}")
+                                                                                     
     assert labels.dim() == logits.dim() - 1
     assert labels.shape == logits.shape[:-1]
     return logits.log_softmax(-1).gather(-1, labels.unsqueeze(-1)).squeeze(-1)
@@ -716,12 +727,12 @@ def kl_loc_loss(pre, post, mask=None):
     assert pre_.shape[0] == post_.shape[0]
 
     if not sequence:
-        if pre_.shape[-1] == 1:  # No masking needed for binary classification
+        if pre_.shape[-1] == 1:                                               
             return (pre.sigmoid() * (F.logsigmoid(pre) - F.logsigmoid(post))).mean() + (
                 (-pre).sigmoid() * (F.logsigmoid(-pre) - F.logsigmoid(-post))
             ).mean()
-    else:  # We have sequences of predictions; masking needed
-        # print("sequence")
+    else:                                                    
+                           
         if pre_.shape[-1] > 1:
             assert mask is not None
             mask_ = mask.view(pre_.shape[0])
@@ -808,7 +819,7 @@ def test_instance_change(model, tok, max_length, prompts, targets, device, P = N
 
         model_response = [tok.decode(x, skip_special_tokens=True) for x in pre_edit_outputs.detach().cpu().numpy().tolist()]
         answer = model_response[0][model_response[0].rfind('?')+2:]
-        # print(model_response[0], answer)
+                                          
 
         if "yes" in answer.lower():
             return np.ones(1)
@@ -852,7 +863,7 @@ def test_safety_gen(
         max_tokens = 1624, 
         max_output_tokens=600):
     tokenizer.padding_side = 'left'
-    # if input_tokens (at least 1024) + output_tokens (at least 600) < 1624, truncate the input length (from right to left, as harmful questions typically appear on the right)
+                                                                                                                                                                               
     if max_tokens < 1624:
         only_response = []
         for item in test_prompt:

@@ -39,7 +39,7 @@ def uuid(digits=4):
     return uuid.uuid_value
 
 def ckpt_dir():
-    """returns the directory in which to store model checkpoints"""
+
     path = "./ckpts/"
     if not os.path.exists(path):
         os.makedirs(path)
@@ -52,7 +52,7 @@ def get_params(model):
     return model.state_dict()
 
 def get_shape(p, model): 
-    # We need to flip the shapes since OpenAI gpt2 uses convs instead of linear
+                                                                               
     return p.shape if isinstance(model, transformers.GPT2LMHeadModel) else (p.shape[1], p.shape[0])
 
 def get_logits(x):
@@ -64,7 +64,7 @@ def tokenize(batch, tokenizer, device, test=False):
         prompt=[prompt]
     if not isinstance(label, list):
         label=[label]
-    mask_token = -100 # ignore_index of CrossEntropyLoss
+    mask_token = -100                                   
     if test or not label:
         tokens = tokenizer(list(prompt), return_tensors="pt", padding=True, truncation=True)
         tokens["labels"] = tokens["input_ids"].clone()
@@ -90,7 +90,7 @@ def multimodal_tokenize(batch, processor, device, hparams):
     input_images = [item['image'] for item in batch]
     labels = [item['target'] for item in batch]
     file_type = batch[0]['file_type']
-    mask_token = -100 # ignore_index of CrossEntropyLoss
+    mask_token = -100                                   
     if file_type == "video":
         temp_prompt = [processor.apply_chat_template([
                                 {
