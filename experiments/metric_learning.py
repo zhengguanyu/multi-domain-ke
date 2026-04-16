@@ -1,5 +1,3 @@
-                                
-                                  
 import os
 import sys
 from typing import List, Dict, Optional, Any, Tuple
@@ -14,9 +12,7 @@ from sentence_transformers.training_args import SentenceTransformerTrainingArgum
 import math
 import json
 import datasets
-from sentence_transformers.losses.BatchHardTripletLoss import BatchHardTripletLossDistanceFunction                  
-sys.path.append(os.getcwd() + '/EasyEdit')
-sys.path.append(os.getcwd() + '/EasyEdit/experiments')
+from sentence_transformers.losses.BatchHardTripletLoss import BatchHardTripletLossDistanceFunction
 
 try:
     from EasyEdit.easyeditor import (
@@ -46,43 +42,24 @@ def prepare_triplet_data(root_dir: str,
                          random_sample: bool = False) -> tuple[datasets.Dataset, datasets.Dataset]:              
 
 
-
-
-
-
-
-
-
-
-
-
-
-    print(f"开始准备 MultiArea 数据集，根目录: {root_dir}")
-
     multiarea_dataset = MultiAreaDataset(
         root_dir=root_dir,
         dataset_configs=dataset_configs,
         seed=seed,
         random_sample=random_sample
     )
-    print("MultiAreaDataset 实例创建成功。")
 
     prompts, rephrase_prompts, _, _, locality_inputs, _ = multiarea_dataset.to_edit_dataset()
     locality_prompts = locality_inputs['neighborhood']['prompt']
-    print(f"成功提取到 {len(prompts)} 个编辑问题 (anchors)。")
-    print(f"成功提取到 {len(rephrase_prompts)} 个等价改写问题 (positives)。")
-    print(f"成功提取到 {len(locality_prompts)} 个局部性问题 (negatives)。")
 
     min_len = min(len(prompts), len(rephrase_prompts), len(locality_prompts))
     if not (len(prompts) == len(rephrase_prompts) == len(locality_prompts)):
-        print(f"警告：提取的 Anchors ({len(prompts)}), Positives ({len(rephrase_prompts)}), Negatives ({len(locality_prompts)}) 数量不一致！")
-        print(f"将使用前 {min_len} 条数据构建三元组。")
+
         prompts = prompts[:min_len]
         rephrase_prompts = rephrase_prompts[:min_len]
         locality_prompts = locality_prompts[:min_len]
 
     if min_len == 0:
-        print("错误：没有有效的三元组数据可以用于创建数据集！")
                                            
         empty_data = {'anchor': [], 'positive': [], 'negative': []}
         return datasets.Dataset.from_dict(empty_data), datasets.Dataset.from_dict(empty_data)
@@ -97,7 +74,6 @@ def prepare_triplet_data(root_dir: str,
         random_state=seed,
         shuffle=True
     )
-    print(f"数据已分割：训练集 {len(train_anchors)} 条，验证集 {len(val_anchors)} 条。")
 
                                                  
     train_data_dict = {
@@ -131,10 +107,6 @@ def prepare_triplet_data(root_dir: str,
         val_dataset.info.dataset_name = "multi_area_triplet_validation"
         val_dataset.info.description = "Validation dataset for multi-area triplet loss fine-tuning."      
 
-    print("Hugging Face 训练数据集创建成功:")
-    print(train_dataset)
-    print("Hugging Face 验证数据集创建成功:")
-    print(val_dataset)
     return train_dataset, val_dataset
 
 
@@ -192,17 +164,10 @@ def finetune_sentence_transformer(
         eval_steps: int,
 ) -> Optional[str]:
 
-
-
-    print("=" * 30)
-    print("开始 Sentence Transformer 微调流程")
-    print("=" * 30)
-
                         
     train_dataset, eval_dataset = prepare_triplet_data(root_dir=data_root_dir, dataset_configs=data_configs)
 
     model = SentenceTransformer(base_model_name)
-    print(f'基础模型 {base_model_name} 加载成昆')
 
                        
     if distance_metric_name.upper() == "COSINE":
@@ -210,7 +175,6 @@ def finetune_sentence_transformer(
     elif distance_metric_name.upper() == "EUCLIDEAN":
         distance_metric = losses.SiameseDistanceMetric.EUCLIDEAN
     else:
-        print(f"警告：未知的距离度量 '{distance_metric_name}'，将使用默认的 COSINE。")
         distance_metric = losses.SiameseDistanceMetric.COSINE_DISTANCE
 
     loss_func = losses.TripletLoss(model=model, distance_metric=distance_metric, triplet_margin=triplet_margin)
@@ -220,7 +184,6 @@ def finetune_sentence_transformer(
     steps_per_epoch = math.ceil(len(train_dataset) / train_batch_size)
     total_steps = steps_per_epoch * num_train_epochs
     warmup_steps = math.ceil(total_steps * warmup_ratio)
-    print(f"总训练步数: {total_steps}, 预热步数: {warmup_steps}")
 
     training_args = SentenceTransformerTrainingArguments(
         output_dir=output_model_dir,
@@ -262,20 +225,16 @@ def finetune_sentence_transformer(
     os.makedirs(final_model_path, exist_ok=True)          
     model.save(final_model_path)
 
-    print("=" * 30)
-    print("微调流程成功结束。")
-    print(f"最终模型已保存至: {final_model_path}")
-    print("=" * 30)
     return final_model_path
 
                
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--base_model_name", type=str, default='/mnt/e/model/all-MiniLM-L6-v2')
-    parser.add_argument("--data_root_dir", type=str, default='EasyEdit/data/output_meta_llama_3_8b_instruct')
-    parser.add_argument("--output_model_dir", type=str, default='./finetuned_sbert_triplet')
-    parser.add_argument("--final_model_subdir", type=str, default='final_model_0.9')
+    parser.add_argument("--base_model_name", type=str, default='all-MiniLM-L6-v2')
+    parser.add_argument("--data_root_dir", type=str, default='data/HalluEditBench')
+    parser.add_argument("--output_model_dir", type=str, default='./ft')
+    parser.add_argument("--final_model_subdir", type=str, default='model')
     parser.add_argument("--samples_per_file", type=int, default=1000,
                         help="Max triplets sampled per multi-area JSON file (capped by file size)")
     args = parser.parse_args()

@@ -1,9 +1,9 @@
 alg_name: "GRACE"
-model_name: "Qwen2.5-7B-Instruct"
+model_name: "Meta-Llama-3-8B-Instruct"
 device: 0
 
 inner_params:
-- model.layers[22].mlp.down_proj.weight
+- model.layers[24].mlp.down_proj.weight
 
 edit_lr: 1.0
 n_iter: 50

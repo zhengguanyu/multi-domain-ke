@@ -9,12 +9,6 @@ import random
 
 class MultiAreaDataset:
     def __init__(self, root_dir, dataset_configs, random_sample=True, seed=42):
-
-
-
-
-
-
         self.prompts = []
         self.subjects = []
         self.target_news = []
@@ -30,9 +24,7 @@ class MultiAreaDataset:
         for filename, K in dataset_configs.items():
             sample_algo = '随机' if random_sample else '顺序'
             file_path = os.path.join(root_dir, filename)
-            print(f'从文件中{file_path}采样数据：{filename}, 采样数：{K}')
             if not os.path.isfile(file_path):
-                print(f"[⚠️ 警告] 文件 {filename} 不存在，跳过它！")
                 continue
 
             with open(file_path, 'r', encoding='utf-8') as f:
@@ -40,7 +32,6 @@ class MultiAreaDataset:
 
                         
             if K > len(data):
-                print(f"[⚠️ 警告] 采样数 {K} 大于数据集长度 {len(data)}，使用全量数据")
                 K = len(data)
 
             if random_sample:
@@ -63,7 +54,6 @@ class MultiAreaDataset:
                     self.rephrase_prompts.append(rephrase_list[0]['prompt'])
                 else:
                     self.rephrase_prompts.append("")
-                    print(f"[😅 提醒] rephrase 不存在于 {filename} 的某条数据中，哥只能补个空字符串啦")
 
             self.source_files.extend([filename] * K)
 
@@ -92,10 +82,9 @@ if __name__ == '__main__':
         'places_city.json': 5
     }
 
-    dataset = MultiAreaDataset(r'O:\bishe3\EasyEdit\data\output_llama_2_7b_chat_hf', configs, seed=42, random_sample=False)
+    dataset = MultiAreaDataset(r'O:HalluEditBench\output_llama_2_7b_chat_hf', configs, seed=42, random_sample=False)
 
-                                   
-    print("locality 总条数：", len(dataset.locality_inputs['neighborhood']['prompt']))
+
     print('prompt')
     print(dataset.prompts)
     print('target new')

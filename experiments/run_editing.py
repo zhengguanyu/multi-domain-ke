@@ -1,31 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import os
 import sys
 import json
@@ -50,10 +22,6 @@ from easyeditor import BaseEditor, CKnowEditDataset, KnowEditDataset
 from easyeditor.models.asmem.router import KnowRouter
 from multiarea_dataset import MultiAreaDataset
 
-
-                                                                              
-                  
-                                                                              
 HPARAMS_MAP = {
     'FT':        FTHyperParams,
     'ROME':      ROMEHyperParams,
@@ -62,19 +30,11 @@ HPARAMS_MAP = {
     'WISE':      WISEHyperParams,
     'ASMem':       ASMemHyperParams,           
     'AlphaEdit': AlphaEditHyperParams,
-    'EMMET':     EMMETHyperParams,
-                          
     'NDEdit':    NDEditHyperParams,
     'DeltaEdit': DeltaEditHyperParams,
-    'EAMET':     EAMETHyperParams,
     'BLUE':      BLUEHyperParams,
-    'PRUNE':     BLUEHyperParams,
     'RECT':      BLUEHyperParams,
 }
-
-                                                                              
-                 
-                                                                              
 
 def load_hallu(args):
 
@@ -105,10 +65,6 @@ def load_hallu(args):
 
 
 def parse_hallu_configs(config_str):
-
-
-
-
 
     ALL_FILES = [
         "art_sculpture", "business_brand", "business_corporation",
@@ -316,25 +272,9 @@ def load_zsre(args):
 DATASET_LOADERS = {
     'hallu':       load_hallu,
     'cknowedit':   load_cknowedit,
-    'counterfact': load_counterfact,
-    'zsre':        load_zsre,
 }
 
-
-                                                                              
-                                    
-                                                                              
-
 def interleave_by_domain(data, source_files):
-
-
-
-
-
-
-
-
-
 
     if source_files is None or len(source_files) == 0:
         return data
@@ -390,11 +330,6 @@ def interleave_by_domain(data, source_files):
 
     return reordered
 
-
-                                                                              
-                         
-                                                                              
-
 def load_wise_loc_prompts(n, loc_path=None):
 
     if loc_path is None:
@@ -411,11 +346,6 @@ def load_wise_loc_prompts(n, loc_path=None):
             f"Use --loc_data_path to specify the correct path to zsre_mend_train.json")
     loc_data = json.load(open(loc_path, 'r', encoding='utf-8'))[:n]
     return [d['loc'] + ' ' + d['loc_ans'] for d in loc_data]
-
-
-                                                                              
-                                
-                                                                              
 
 def build_or_load_router(hparams, prompts, args):
 
@@ -463,10 +393,6 @@ def build_or_load_router(hparams, prompts, args):
     return router
 
 
-                                                                              
-                   
-                                                                              
-
 def run_editing(editor, data, method, args, router=None, loc_prompts=None):
 
                          
@@ -500,11 +426,6 @@ def run_editing(editor, data, method, args, router=None, loc_prompts=None):
         metrics, edited_model, weights_copy = editor.edit(**kwargs)
 
     return metrics, edited_model, weights_copy
-
-
-                                                                              
-     
-                                                                              
 
 def str2bool(v):
     if isinstance(v, bool):
