@@ -1,14 +1,14 @@
 alg_name: "FT"
-model_name: "Meta-Llama-3-8B-Instruct"
+model_name: "<path_to_Meta-Llama-3-8B-Instruct>"
 device: 0
 
-layers: [24]
-num_steps: 25
-batch_size: 1
-max_length: 40
-lr: 5e-4
-weight_decay: 0
-kl_factor: 0
+layers: [<layer>]
+num_steps: <num_steps>
+batch_size: <batch_size>
+max_length: <max_length>
+lr: <lr>
+weight_decay: <weight_decay>
+kl_factor: <kl_factor>
 norm_constraint: false
 
 objective_optimization: "prompt_last"

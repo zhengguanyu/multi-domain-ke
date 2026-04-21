@@ -1,13 +1,13 @@
 alg_name: "GRACE"
-model_name: "Qwen2.5-7B-Instruct"
+model_name: "<path_to_Qwen2.5-7B-Instruct>"
 device: 0
 
 inner_params:
-- model.layers[22].mlp.down_proj.weight
+- model.layers[<edit_layer>].mlp.down_proj.weight
 
-edit_lr: 1.0
-n_iter: 50
-eps: 1.0
+edit_lr: <edit_lr>
+n_iter: <n_iter>
+eps: <eps>
 dist_fn: euc
 val_init: cold
 val_train: sgd
@@ -15,5 +15,5 @@ val_reg: None
 reg: early_stop
 replacement: replace_last
 eps_expand: coverage
-num_pert: 8
-dropout: 0.0
+num_pert: <num_pert>
+dropout: <dropout>

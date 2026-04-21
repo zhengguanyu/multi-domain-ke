@@ -1,23 +1,23 @@
 alg_name: "WISE"
-model_name: "Meta-Llama-3-8B-Instruct"
+model_name: "<path_to_Meta-Llama-3-8B-Instruct>"
 device: 0
 
-mask_ratio: 0.2
-edit_lr: 1.0
-n_iter: 70
-norm_constraint: 1.0
-act_margin: [5.0, 20.0, 10.0]
-act_ratio: 0.88
-save_freq: 2000
-merge_freq: 4000
+mask_ratio: <mask_ratio>
+edit_lr: <edit_lr>
+n_iter: <n_iter>
+norm_constraint: <norm_constraint>
+act_margin: [<act_margin>, <act_margin>, <act_margin>]
+act_ratio: <act_ratio>
+save_freq: <save_freq>
+merge_freq: <merge_freq>
 merge_alg: 'ties'
 objective_optimization: 'only_label'
 inner_params:
-- model.layers[24].mlp.down_proj.weight
+- model.layers[<edit_layer>].mlp.down_proj.weight
 
 # for merge
-densities: 0.53
-weights: 1.0
+densities: <densities>
+weights: <weights>
 
 # for retrieve
 retrieve: False
