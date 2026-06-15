@@ -73,11 +73,13 @@ Experiments use HalluEditBench and CKnowEdit. Dataset files are not bundled; obt
 ## Citation
 
 ```bibtex
-@article{zheng2025asmem,
-  title   = {ASMem: Anchor Sparse Memory for Multi-Domain Knowledge Editing of Large Language Models},
-  author  = {Zheng, Guanyu and Wang, Zhenyu and Zhao, Yang and others},
-  journal = {Available at SSRN 5504012},
-  year    = {2025}
+@article{zheng2026asmem,
+  title={ASMem: Anchor Sparse Memory for Multi-Domain Knowledge Editing of Large Language Models},
+  author={Zheng, Guanyu and Wang, Zhenyu and Zhao, Yang and He, Tingting and Wang, Xv and Wang, Haochang and Zhao, Tiejun and Zong, Chengqing},
+  journal={Neural Networks},
+  pages={109230},
+  year={2026},
+  publisher={Elsevier}
 }
 ```
 
